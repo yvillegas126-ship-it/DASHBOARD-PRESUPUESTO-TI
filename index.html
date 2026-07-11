@@ -11,39 +11,67 @@
     <!-- Local JS Libraries (Offline support) -->
     <script src="xlsx.full.min.js"></script>
     <script src="chart.js"></script>
+    <script src="chartjs-plugin-datalabels.min.js"></script>
     
     <style>
-        /* Modern Dashboard Stylesheet - Premium Dark Theme */
+        /* CSS Custom Fonts Fallbacks */
+        @font-face {
+            font-family: 'HelveticaNeueLT Pro 97 BlkCn';
+            src: local('HelveticaNeueLT Pro 97 BlkCn'), local('Helvetica Neue'), local('Arial');
+        }
+        @font-face {
+            font-family: 'HelveticaNeueLT Pro 47 LtCn';
+            src: local('HelveticaNeueLT Pro 47 LtCn'), local('Helvetica Neue'), local('Arial');
+        }
+
         :root {
-            --bg-color: #0b0f17;
-            --card-bg: rgba(20, 26, 42, 0.75);
-            --card-bg-solid: #141a2a;
-            --card-border: rgba(255, 255, 255, 0.07);
-            --card-hover-border: rgba(255, 255, 255, 0.15);
+            /* Dark Mode variables (default) - Solid Black */
+            --bg-color: #000000;
+            --card-bg: #000000;
+            --card-bg-solid: #000000;
+            --card-border: #262626;
+            --card-hover-border: #404040;
             
             --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
+            --text-secondary: #a3a3a3;
+            --text-muted: #737373;
+            --border-color: #262626;
             
-            --accent-color: #8bae15; /* ADP Green Accent */
-            --accent-dark: #6e8c10;
-            --accent-glow: rgba(139, 174, 21, 0.25);
+            /* AdP Color Palette */
+            --accent-color: #87A227; /* Green AdP */
+            --accent-dark: #6e821e;
+            --accent-glow: rgba(135, 162, 39, 0.2);
+            --magenta-color: #E10E7E; /* Magenta AdP */
+            --magenta-glow: rgba(225, 14, 126, 0.15);
             
-            --success-color: #10b981;
-            --success-glow: rgba(16, 185, 129, 0.15);
+            --success-color: #87A227;
+            --success-glow: rgba(135, 162, 39, 0.1);
             --danger-color: #ef4444;
-            --danger-glow: rgba(239, 68, 68, 0.15);
+            --danger-glow: rgba(239, 68, 68, 0.1);
             
             --border-radius-lg: 16px;
             --border-radius-md: 10px;
             --border-radius-sm: 6px;
             
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
-            --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+            --shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.05);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.8);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.9);
             
-            --font-primary: 'Outfit', sans-serif;
-            --font-secondary: 'Inter', sans-serif;
+            --font-primary: 'HelveticaNeueLT Pro 47 LtCn', 'Helvetica Neue', Arial, sans-serif;
+            --font-titles: 'HelveticaNeueLT Pro 97 BlkCn', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        /* Light Mode variables */
+        body.light-theme {
+            --bg-color: #ffffff;
+            --card-bg: #ffffff; /* White background in light theme */
+            --card-bg-solid: #f3f4f6;
+            --card-border: rgba(0, 0, 0, 0.08);
+            --card-hover-border: rgba(0, 0, 0, 0.15);
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-muted: #9ca3af;
+            --border-color: rgba(0, 0, 0, 0.08);
         }
 
         /* Reset and base styles */
@@ -53,16 +81,15 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
             background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 10% 10%, rgba(20, 30, 50, 0.4) 0px, transparent 50%),
-                radial-gradient(at 90% 90%, rgba(139, 174, 21, 0.03) 0px, transparent 50%);
             color: var(--text-primary);
             font-family: var(--font-primary);
-            min-height: 100vh;
-            padding: 24px;
-            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         /* Custom Scrollbars */
@@ -77,53 +104,87 @@
             background: rgba(255, 255, 255, 0.15);
             border-radius: var(--border-radius-sm);
         }
+        body.light-theme ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+        }
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.3);
         }
 
+        /* App Layout (Viewport Fijo) */
         .app-container {
-            max-width: 1600px;
-            margin: 0 auto;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            padding: 12px 24px;
+            gap: 10px;
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
-        /* Header */
+        /* Header (Fixed Height) */
         .dashboard-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 16px;
+            padding: 6px 16px;
+            height: 48px;
             border-bottom: 3px solid var(--accent-color);
-            background: rgba(11, 15, 23, 0.85);
-            backdrop-filter: blur(10px);
+            background: var(--card-bg-solid);
             border-radius: var(--border-radius-sm);
+            flex-shrink: 0;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 10px;
+        }
+
+        /* Fixed width/height logo box to prevent shifting */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 32px;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        body:not(.light-theme) .logo-container {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 2px 8px;
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
         }
 
         .logo-container img {
-            height: 40px;
+            max-height: 24px;
+            max-width: 100%;
             object-fit: contain;
         }
 
         #dashboard-title {
-            font-size: 1.5rem;
+            font-family: var(--font-titles);
+            font-size: 1.35rem;
             font-weight: 700;
-            letter-spacing: -0.5px;
             color: var(--text-primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         #update-date-label {
             font-family: var(--font-secondary);
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
             font-weight: 500;
+            font-style: italic; /* Italics */
+            margin-right: 6px;
         }
 
         /* Card Box base style */
@@ -133,8 +194,14 @@
             border: 1px solid var(--card-border);
             border-radius: var(--border-radius-lg);
             box-shadow: var(--shadow-md);
-            padding: 20px;
+            padding: 12px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* No shadows on containers in Light theme */
+        body.light-theme .card-box {
+            box-shadow: none !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
         }
 
         /* Toolbar & Filters */
@@ -143,17 +210,17 @@
             justify-content: space-between;
             align-items: center;
             gap: 20px;
-            background: rgba(20, 26, 42, 0.4);
+            background: var(--card-bg-solid);
             border: 1px solid var(--card-border);
-            padding: 12px 20px;
+            padding: 6px 16px;
             border-radius: var(--border-radius-md);
-            backdrop-filter: blur(8px);
+            flex-shrink: 0;
         }
 
         .filters-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -164,23 +231,23 @@
         }
 
         .filter-group label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 700;
             color: var(--text-secondary);
             letter-spacing: 0.5px;
         }
 
         .filter-group select {
-            background: rgba(11, 15, 23, 0.8);
+            background: var(--bg-color);
             border: 1px solid var(--card-border);
             color: var(--text-primary);
-            padding: 6px 12px;
+            padding: 4px 8px;
             border-radius: var(--border-radius-sm);
             font-family: var(--font-secondary);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             outline: none;
             cursor: pointer;
-            min-width: 110px;
+            min-width: 100px;
             transition: border-color 0.2s;
         }
 
@@ -191,44 +258,43 @@
         .toolbar-actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 6px;
         }
 
         .tool-btn {
-            background: rgba(11, 15, 23, 0.8);
+            background: var(--bg-color);
             border: 1px solid var(--card-border);
             color: var(--text-primary);
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             border-radius: var(--border-radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 1.05rem;
+            font-size: 0.9rem;
         }
 
         .tool-btn:hover {
             border-color: var(--accent-color);
             color: var(--accent-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
         }
 
         .currency-toggle-btn {
             width: auto;
-            padding: 0 12px;
-            gap: 8px;
+            padding: 0 8px;
+            gap: 5px;
             font-weight: 700;
         }
 
         .currency-indicator {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             color: var(--accent-color);
         }
 
-        /* Menu Dropdown */
+        /* Menu Dropdown (Click-to-Toggle) */
         .menu-dropdown-container {
             position: relative;
             display: inline-block;
@@ -238,7 +304,7 @@
             display: none;
             position: absolute;
             right: 0;
-            top: 44px;
+            top: 36px;
             background: var(--card-bg-solid);
             border: 1px solid var(--card-border);
             min-width: 120px;
@@ -248,13 +314,17 @@
             overflow: hidden;
         }
 
+        .dropdown-content.show {
+            display: block;
+        }
+
         .dropdown-content a {
             color: var(--text-primary);
-            padding: 10px 16px;
+            padding: 8px 14px;
             text-decoration: none;
             display: block;
             font-family: var(--font-secondary);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             transition: background 0.2s, color 0.2s;
             font-weight: 500;
         }
@@ -264,105 +334,147 @@
             color: #000;
         }
 
-        .menu-dropdown-container:hover .dropdown-content {
-            display: block;
-        }
-
-        /* KPI Grid */
+        /* KPI Cards Grid - Left Aligned Layout */
         .kpis-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .kpis-section {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 640px) {
+            .kpis-section {
+                grid-template-columns: 1fr;
+            }
         }
 
         .kpi-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--border-radius-lg);
-            padding: 20px;
+            padding: 14px 16px;
+            min-height: 145px; /* Stretched taller KPI card height */
             box-shadow: var(--shadow-sm);
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            justify-content: space-between; /* Space out top and bottom */
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--accent-color);
-            opacity: 0.8;
+        /* 5px Borde Izquierdo Pronunciado por Tarjeta */
+        #kpi-presupuesto { border-left: 5px solid #ffffff; } /* White in Dark Mode */
+        body.light-theme #kpi-presupuesto { border-left: 5px solid #252423; } /* Black in Light Mode */
+        #kpi-gastado { border-left: 5px solid #87A227; }
+        #kpi-ahorro { border-left: 5px solid #E10E7E; }
+        #kpi-no-usado { border-left: 5px solid #003463; }
+
+        body.light-theme .kpi-card {
+            background: #ffffff; /* White card background in Light Theme */
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: none; /* No shadow in light theme */
         }
 
         .kpi-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-1px);
             border-color: var(--card-hover-border);
-            box-shadow: var(--shadow-md);
         }
 
-        .kpi-card-header {
+        .kpi-card-main {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
         }
 
-        .kpi-card-icon {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            width: 32px;
-            height: 32px;
+        .kpi-card-icon-container {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 50%;
+	    /* SIN borde aquí — así el modo claro queda tal cual está hoy, sin ningún cambio */
+	}
+
+	/* El borde solo aplica en modo oscuro, que es el único que lo necesita */
+	body:not(.light-theme) #kpi-presupuesto .kpi-card-icon-container { border: 10px solid rgba(239, 239, 239); }
+body:not(.light-theme) #kpi-gastado .kpi-card-icon-container { border: 10px solid rgba(247, 249, 238); }
+body:not(.light-theme) #kpi-ahorro .kpi-card-icon-container { border: 10px solid rgba(253, 240, 247); }
+body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px solid rgba(234, 243, 251); }
+	}
+
+        #kpi-presupuesto .kpi-card-icon-container { background: rgba(255, 255, 255, 0.08); }
+        body.light-theme #kpi-presupuesto .kpi-card-icon-container { background: rgba(37, 36, 35, 0.06); }
+        #kpi-gastado .kpi-card-icon-container { background: rgba(135, 162, 39, 0.08); }
+        #kpi-ahorro .kpi-card-icon-container { background: rgba(225, 14, 126, 0.08); }
+        #kpi-no-usado .kpi-card-icon-container { background: rgba(0, 52, 99, 0.08); }
+
+        .kpi-card-icon-container img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .kpi-card-icon-fallback {
+            font-size: 1.35rem;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .kpi-card-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .kpi-card-title {
-            font-size: 0.95rem;
+            font-size: 0.84rem; /* Increased title font size to balance space */
             font-weight: 600;
             color: var(--text-secondary);
-        }
-
-        .kpi-card-info-trigger {
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: color 0.2s;
-        }
-
-        .kpi-card-info-trigger:hover {
-            color: var(--text-secondary);
+            text-transform: none;
         }
 
         .kpi-card-value {
-            font-size: 2.2rem;
+            font-family: var(--font-titles);
+            font-size: 2.05rem; /* Increased amount font size to avoid empty space */
             font-weight: 700;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
             color: var(--text-primary);
+            line-height: 1.2;
         }
 
+        /* KPI Card Footer - Bold & Centered info with divider spacing */
         .kpi-card-footer {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 8px;
+            gap: 2px;
+            border-top: 1px solid var(--border-color); /* Grey divider (#262626 in dark mode, matches card border!) */
+            margin-top: 8px; /* Extra margin to separate the line */
+            padding-top: 11px; /* Extra padding to separate the line */
+            font-size: 0.72rem;
+            text-align: center;
+            align-items: center;
+            justify-content: center;
         }
 
         .kpi-subitem {
             font-family: var(--font-secondary);
-            font-size: 0.8rem;
             color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: block;
+            text-align: center;
+            width: 100%;
+        }
+
+        .kpi-subitem strong {
+            font-weight: 700;
+            color: var(--text-secondary);
+            body.light-theme & { color: var(--text-primary); }
         }
 
         .kpi-subitem span.val {
@@ -370,22 +482,37 @@
             color: var(--text-primary);
         }
 
-        /* Green/Red Arrow styles */
-        .arrow-up {
-            color: var(--success-color);
-            font-weight: 600;
+        /* Red/Green percentage highlights */
+        .var-pct-label {
+            font-weight: 700;
+        }
+        .var-pct-label.green-pct {
+            color: #87A227 !important;
+        }
+        .var-pct-label.red-pct {
+            color: #ef4444 !important;
         }
 
-        .arrow-down {
-            color: var(--danger-color);
-            font-weight: 600;
+        .kpi-card-info-trigger {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.7rem;
         }
 
-        /* Progress Ring for Gastado */
+        .kpi-card-info-trigger:hover {
+            color: var(--text-secondary);
+        }
+
+        /* Progress ring for Gastado - Positioned slightly more to the left/top */
         .kpi-progress-wrapper {
-            position: relative;
-            width: 40px;
-            height: 40px;
+            position: absolute;
+            right: 16px; /* Moved slightly */
+            top: 16px;   /* Moved slightly */
+            width: 52px;
+            height: 52px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -395,36 +522,47 @@
             transform: rotate(-90deg);
         }
 
+        .progress-ring__background {
+            stroke: rgba(255, 255, 255, 0.35);
+        }
+        body.light-theme .progress-ring__background {
+            stroke: rgba(0, 0, 0, 0.15); /* visible grey progress background track in Light Theme */
+        }
+
         .progress-ring__circle {
             transition: stroke-dashoffset 0.35s;
             transform-origin: 50% 50%;
-            stroke-dasharray: 100.53; /* 2 * PI * 16 */
-            stroke-dashoffset: 100.53;
+            stroke-dasharray: 138.23; /* 2 * PI * 22 */
+            stroke-dashoffset: 138.23;
         }
 
         .progress-text {
             position: absolute;
-            font-size: 0.65rem;
+            font-size: 0.75rem;
             font-family: var(--font-secondary);
             font-weight: 700;
             color: var(--text-primary);
         }
 
-        /* Savings pill for KPI 3 and 4 */
+        /* Saving percentage pill position */
         .kpi-saving-pct-pill {
+            position: absolute;
+            right: 16px; /* Aligned with progress wrapper */
+            top: 16px;
             font-family: var(--font-secondary);
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 700;
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 20px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
+            body.light-theme & { background: rgba(0, 0, 0, 0.03); border-color: rgba(0,0,0,0.06); }
         }
 
         .kpi-saving-pct-pill.positive {
             background: var(--success-glow);
-            border-color: rgba(16, 185, 129, 0.2);
-            color: var(--success-color);
+            border-color: rgba(135, 162, 39, 0.2);
+            color: var(--accent-color);
         }
 
         .kpi-saving-pct-pill.negative {
@@ -433,111 +571,193 @@
             color: var(--danger-color);
         }
 
-        /* Monthly Chart */
+        /* Monthly Chart Section */
         .chart-section {
-            width: 100%;
+            flex: 1.3;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            padding: 16px 20px; /* Spacious card padding */
         }
 
-        .chart-container {
-            height: 320px;
-            position: relative;
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 16px; /* Pulls title and legend inwards, away from edges */
+            flex-shrink: 0;
         }
 
         .section-title {
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 700;
-            margin-bottom: 16px;
             color: var(--text-primary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            margin-bottom: 0;
         }
 
-        /* Table Cards */
+        .chart-legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: var(--font-secondary);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            body.light-theme & { color: var(--text-primary); }
+        }
+
+        .legend-color-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-line-box {
+            width: 16px;
+            height: 3px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend-line-box::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: inherit;
+        }
+
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        /* Tables Grid Section */
         .tables-grid-section {
+            flex: 1.2;
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            min-height: 0;
         }
 
-        @media (min-width: 1024px) {
+        @media (max-width: 768px) {
             .tables-grid-section {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
             }
         }
 
         .table-card {
             display: flex;
             flex-direction: column;
+            min-height: 0;
         }
 
         .table-title {
-            font-size: 1.05rem;
+            font-size: 0.92rem;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
             color: var(--text-primary);
+            padding-left: 8px;
+        }
+
+        /* Left title Proyectos: White in dark mode, Black in light mode */
+        #left-table-title {
+            border-left: 3px solid var(--text-primary);
+        }
+
+        /* Right title Otros Servicios: Green bar always */
+        #right-table-title {
             border-left: 3px solid var(--accent-color);
-            padding-left: 10px;
         }
 
         .table-scroll-container {
-            overflow-x: auto;
-            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius-sm);
         }
 
+        /* Separated borders layout for robust sticky row top lines */
         .dashboard-table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate; /* Separated model */
+            border-spacing: 0;        /* Zero spacing */
             font-family: var(--font-secondary);
-            font-size: 0.85rem;
-            text-align: left;
+            font-size: 0.8rem;
+
         }
 
         .dashboard-table th {
-            background: rgba(11, 15, 23, 0.6);
+            background: var(--card-bg-solid);
             color: var(--text-secondary);
             font-weight: 600;
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 8px 10px;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+  	    white-space: nowrap;
+        }
+
+        /* Left Table Header (Black/White border) */
+        #left-table th {
+            border-bottom: 2px solid var(--text-primary);
+        }
+
+        /* Right Table Header (Green border) */
+        #right-table th {
+            border-bottom: 2px solid var(--accent-color);
         }
 
         .dashboard-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            color: var(--text-primary);
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color); /* Bottom border on cells */
+        }
+
+        .dashboard-table tbody tr {
+            cursor: pointer;
+            user-select: none;
         }
 
         .dashboard-table tbody tr:hover {
             background: rgba(255, 255, 255, 0.02);
+            body.light-theme & { background: rgba(0, 0, 0, 0.02); }
         }
 
-        /* Expandable tree table styles */
         .tree-row-parent {
             font-weight: 600;
-            cursor: pointer;
             background: rgba(255, 255, 255, 0.01);
-        }
-
-        .tree-row-parent td {
-            border-bottom-color: rgba(255, 255, 255, 0.08);
+            body.light-theme & { background: rgba(0,0,0,0.01); }
         }
 
         .tree-row-child {
             background: rgba(0, 0, 0, 0.15);
-            font-size: 0.8rem;
+            body.light-theme & { background: rgba(0, 0, 0, 0.03); }
+            font-size: 0.75rem;
         }
 
         .tree-row-child td:first-child {
-            padding-left: 28px;
+            padding-left: 24px;
             color: var(--text-secondary);
         }
 
         .tree-toggle-icon {
             display: inline-block;
-            width: 16px;
-            margin-right: 6px;
+            width: 14px;
+            margin-right: 4px;
             text-align: center;
             color: var(--text-muted);
             transition: transform 0.2s;
@@ -548,33 +768,47 @@
             color: var(--accent-color);
         }
 
-        .table-row-total {
+        /* Sticky bottom Total Row - High z-index and thick border-top */
+        #left-table tr.table-row-total td {
+            position: sticky;
+            bottom: 0;
+            z-index: 6; /* Draw on top of scrolled row borders */
+            background: var(--card-bg-solid) !important;
+            border-top: 3px solid var(--text-primary) !important; /* Thick white/black total border */
+            border-bottom: none !important;
             font-weight: 700;
-            background: rgba(11, 15, 23, 0.8) !important;
-            border-top: 2px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .table-row-total td {
             color: var(--text-primary) !important;
-            border-bottom: none;
         }
 
-        /* Numeric alignment */
-        .num-col {
-            text-align: right;
-            font-variant-numeric: tabular-nums;
+        #right-table tr.table-row-total td {
+            position: sticky;
+            bottom: 0;
+            z-index: 6; /* Draw on top of scrolled row borders */
+            background: var(--card-bg-solid) !important;
+            border-top: 3px solid var(--accent-color) !important; /* Thick green total border */
+            border-bottom: none !important;
+            font-weight: 700;
+            color: var(--text-primary) !important;
         }
 
         .selected-row {
-            background: rgba(139, 174, 21, 0.15) !important;
+            background: rgba(135, 162, 39, 0.15) !important;
             outline: 1px solid var(--accent-color);
+            body.light-theme & { background: rgba(135, 162, 39, 0.1) !important; }
+        }
+
+        .num-col {
+            text-align: center;
+            font-variant-numeric: tabular-nums;
         }
 
         /* Detail View Section */
         .detail-view-section {
+            height: 100%;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
+            min-height: 0;
             animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -582,8 +816,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            flex-shrink: 0;
         }
 
         .detail-title-group {
@@ -596,14 +831,14 @@
             background: var(--accent-color);
             border: none;
             color: #000;
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
 
@@ -613,39 +848,57 @@
         }
 
         #detail-view-title {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
+        .detail-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .detail-filters-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            background: rgba(11, 15, 23, 0.4);
-            padding: 16px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            background: var(--card-bg-solid);
+            padding: 12px;
             border-radius: var(--border-radius-md);
             border: 1px solid var(--card-border);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .detail-filters-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 640px) {
+            .detail-filters-container {
+                grid-template-columns: 1fr;
+            }
         }
 
         .detail-filter-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
         .detail-filter-group label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             color: var(--text-secondary);
         }
 
         .detail-filter-group select {
-            background: rgba(11, 15, 23, 0.9);
+            background: var(--bg-color);
             border: 1px solid var(--card-border);
             color: var(--text-primary);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: var(--border-radius-sm);
             font-family: var(--font-secondary);
             font-size: 0.8rem;
@@ -654,15 +907,10 @@
             width: 100%;
         }
 
-        .detail-filter-group select:focus {
-            border-color: var(--accent-color);
-        }
-
-        /* Detail Matrix Table */
+        /* Detail Matrix Table styling */
         .detail-matrix-container {
-            margin-top: 10px;
-            max-height: 500px;
-            overflow-y: auto;
+            flex: 1;
+            overflow: auto;
             border: 1px solid var(--card-border);
             border-radius: var(--border-radius-md);
         }
@@ -675,12 +923,11 @@
         }
 
         .matrix-table th {
-            background: rgba(20, 26, 42, 0.95);
+            background: var(--card-bg-solid);
             color: var(--text-secondary);
             font-weight: 700;
-            padding: 8px 10px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            text-align: center;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 10;
@@ -692,6 +939,10 @@
             left: 0;
             z-index: 5;
             background: var(--card-bg-solid);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 300px;
         }
 
         .matrix-table th:first-child {
@@ -699,121 +950,120 @@
         }
 
         .matrix-table td {
-            padding: 8px 10px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
             color: var(--text-primary);
+            white-space: nowrap;
         }
 
-        .matrix-table tr:hover td {
+        /* Sticky bottom total row in Matrix with sticky first cell */
+        .matrix-table tr.table-row-total td {
+            position: sticky;
+            bottom: 0;
+            z-index: 8;
+            background: var(--card-bg-solid) !important;
+            border-top: 2px solid var(--text-secondary);
+            font-weight: 700;
+            color: var(--text-primary) !important;
+        }
+
+        .matrix-table tr.table-row-total td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 9;
+            background: var(--card-bg-solid) !important;
+        }
+
+        /* Thicker right border to separate months visually */
+        .matrix-table th[colspan="3"],
+        .matrix-table td.matrix-col-ahorrado {
+            border-right: 2px solid var(--text-muted) !important;
+            body.light-theme & { border-right-color: var(--card-border) !important; }
+        }
+
+        .matrix-table tr:hover td:not(:first-child) {
             background: rgba(255, 255, 255, 0.03);
+            body.light-theme & { background: rgba(0, 0, 0, 0.03); }
         }
 
-        .matrix-header-month {
-            border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+        .matrix-col-ppto { background: rgba(255, 255, 255, 0.005); }
+        .matrix-col-gastado { background: rgba(255, 255, 255, 0.015); }
+        .matrix-col-ahorrado { background: rgba(135, 162, 39, 0.02); color: var(--accent-color) !important; }
+
+        .matrix-val-negative { color: var(--danger-color) !important; }
+        .matrix-val-positive { color: var(--accent-color) !important; }
+
+        /* Detail Button Glow Green Icon and Border Only */
+        .btn-detail-glowing {
+            border-color: var(--accent-color) !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            animation: none !important;
         }
 
-        .matrix-header-metrics th {
-            font-size: 0.7rem;
-            padding: 4px 6px;
-            font-weight: 500;
-        }
-
-        .matrix-col-ppto {
-            background: rgba(255, 255, 255, 0.01);
-        }
-
-        .matrix-col-gastado {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .matrix-col-ahorrado {
-            background: rgba(139, 174, 21, 0.03);
+        .btn-detail-glowing i {
             color: var(--accent-color) !important;
         }
 
-        .matrix-val-negative {
-            color: var(--danger-color) !important;
-        }
-
-        .matrix-val-positive {
-            color: var(--success-color) !important;
-        }
-
-        /* Administrative Controls Bar */
-        .admin-controls-card {
-            background: rgba(20, 26, 42, 0.3);
-            padding: 12px 20px;
-            border-radius: var(--border-radius-md);
-        }
-
-        .admin-controls-content {
+        /* Modals and Settings Layout */
+        .settings-grid {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 16px;
         }
 
-        .admin-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        .admin-title i {
-            color: var(--accent-color);
-        }
-
-        .admin-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .admin-btn {
+        .settings-btn {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--card-border);
             color: var(--text-primary);
-            padding: 8px 16px;
+            padding: 12px;
             border-radius: var(--border-radius-sm);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 10px;
             cursor: pointer;
             font-family: var(--font-primary);
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 600;
             transition: all 0.2s;
+            width: 100%;
         }
 
-        .admin-btn:hover {
+        .settings-btn:hover {
             background: rgba(255, 255, 255, 0.08);
             border-color: var(--text-secondary);
         }
 
+        body.light-theme .settings-btn {
+            background: rgba(0, 0, 0, 0.03);
+        }
+        body.light-theme .settings-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
         .upload-btn {
-            background: rgba(139, 174, 21, 0.1);
-            border-color: rgba(139, 174, 21, 0.3);
+            background: rgba(135, 162, 39, 0.1);
+            border-color: rgba(135, 162, 39, 0.3);
             color: var(--accent-color);
         }
 
         .upload-btn:hover {
-            background: rgba(139, 174, 21, 0.2);
+            background: rgba(135, 162, 39, 0.2);
             border-color: var(--accent-color);
         }
 
-        .rates-btn {
-            background: rgba(255, 255, 255, 0.02);
+        .danger-btn {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--danger-color);
         }
 
-        .hidden-input {
-            display: none;
+        .danger-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--danger-color);
         }
 
-        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -845,7 +1095,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .modal-header h3 {
@@ -884,7 +1134,7 @@
             max-height: 200px;
             overflow-y: auto;
             margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
             padding: 8px;
             border-radius: var(--border-radius-sm);
             background: rgba(0, 0, 0, 0.2);
@@ -948,7 +1198,7 @@
             background: var(--text-primary);
         }
 
-        /* Loader Spinner Overlay */
+        /* Loader Spinner */
         .loader-overlay {
             position: fixed;
             top: 0;
@@ -980,12 +1230,10 @@
             color: var(--text-secondary);
         }
 
-        /* Utility Helpers */
         .hidden {
             display: none !important;
         }
 
-        /* Keyframes animations */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -1014,14 +1262,22 @@
         <!-- Header -->
         <header class="dashboard-header">
             <div class="header-left">
-                <div class="logo-container">
+                <div class="logo-container" id="logo-box">
                     <img id="app-logo" src="LOGO.png" alt="ADP Logo" onerror="this.src='https://via.placeholder.com/150x40/1a1a1a/ffffff?text=Aeropuertos+del+Perú'">
                 </div>
                 <h1 id="dashboard-title">Presupuesto TI – OPEX (USD)</h1>
             </div>
             <div class="header-right">
-                <span id="update-date-label">Cargue los archivos para comenzar</span>
-            </div>
+    <span id="update-date-label">Cargue los archivos para comenzar</span>
+    <!-- Gear/Settings Button -->
+    <button id="btn-settings-toggle" class="tool-btn" title="Administración y Carga de Datos">
+        <i class="fa-solid fa-gear"></i>
+    </button>
+    <!-- Theme Toggle Button -->
+    <button id="btn-theme-toggle" class="tool-btn" title="Cambiar Tema (Claro/Oscuro)">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+</div>
         </header>
 
         <!-- Navigation and Tool Bar -->
@@ -1101,99 +1357,108 @@
 
         <!-- KPI Cards Grid -->
         <section class="kpis-section">
-            <!-- Card 1: Presupuestado -->
+            <!-- Card 1: Presupuesto -->
             <div class="kpi-card" id="kpi-presupuesto">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fa-solid fa-file-lines"></i>
+                <div class="kpi-card-main">
+                    <div class="kpi-card-icon-container">
+                        <img src="Presupuestado.png" alt="Icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="fa-solid fa-file-invoice-dollar kpi-card-icon-fallback"></i>
                     </div>
-                    <div class="kpi-card-title-group">
-                        <span class="kpi-card-title">Presupuestado</span>
-                    </div>
-                    <div class="kpi-card-info-trigger" title="Muestra el presupuesto asignado">
-                        <i class="fa-solid fa-circle-info"></i>
+                    <div class="kpi-card-text">
+                        <span class="kpi-card-title">Presupuesto</span>
+                        <div class="kpi-card-value" id="val-presupuestado">-</div>
                     </div>
                 </div>
-                <div class="kpi-card-value" id="val-presupuestado">-</div>
                 <div class="kpi-card-footer">
-                    <div class="kpi-subitem" id="sub-presupuesto-alt">Presupuestado PEN: -</div>
+                    <div class="kpi-subitem" id="sub-presupuesto-alt"><strong>Presupuesto PEN:</strong> -</div>
                     <div class="kpi-subitem" id="sub-presupuesto-prev">
-                        PPTO Año Ant.: <span class="val">-</span> / <span class="var-pct">-</span>
+                        <strong>PPTO Año Ant.:</strong> <span class="val">-</span>
                     </div>
+                </div>
+                <div class="kpi-card-info-trigger" title="Muestra el presupuesto asignado">
+                    <i class="fa-solid fa-circle-info"></i>
                 </div>
             </div>
 
             <!-- Card 2: Gastado -->
             <div class="kpi-card" id="kpi-gastado">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                <div class="kpi-card-main">
+                    <div class="kpi-card-icon-container">
+                        <img src="Gastado.png" alt="Icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="fa-solid fa-hand-holding-dollar kpi-card-icon-fallback"></i>
                     </div>
-                    <div class="kpi-card-title-group">
+                    <div class="kpi-card-text">
                         <span class="kpi-card-title">Gastado</span>
-                    </div>
-                    <div class="kpi-progress-wrapper">
-                        <!-- SVG Progress Ring -->
-                        <svg class="progress-ring" width="40" height="40">
-                            <circle class="progress-ring__background" stroke="#333" stroke-width="3.5" fill="transparent" r="16" cx="20" cy="20"/>
-                            <circle class="progress-ring__circle" stroke="var(--accent-color, #a6c311)" stroke-width="3.5" fill="transparent" r="16" cx="20" cy="20"/>
-                        </svg>
-                        <span class="progress-text" id="pct-gastado">-</span>
+                        <div class="kpi-card-value" id="val-gastado">-</div>
                     </div>
                 </div>
-                <div class="kpi-card-value" id="val-gastado">-</div>
                 <div class="kpi-card-footer">
-                    <div class="kpi-subitem" id="sub-gastado-alt">Gastado PEN: -</div>
+                    <div class="kpi-subitem" id="sub-gastado-alt"><strong>Gastado PEN:</strong> -</div>
                     <div class="kpi-subitem" id="sub-gastado-prev">
-                        Gastado Año Ant.: <span class="val">-</span> / <span class="var-pct">-</span>
+                        <strong>Gastado Año Ant.:</strong> <span class="val">-</span> / <span class="var-pct">-</span>
                     </div>
+                </div>
+                <!-- Larger Progress Circle -->
+                <div class="kpi-progress-wrapper">
+                    <svg class="progress-ring" width="52" height="52">
+                        <circle class="progress-ring__background" stroke-width="4.5" fill="transparent" r="22" cx="26" cy="26"/>
+                        <circle class="progress-ring__circle" stroke="var(--accent-color)" stroke-width="4.5" fill="transparent" r="22" cx="26" cy="26"/>
+                    </svg>
+                    <span class="progress-text" id="pct-gastado">-</span>
                 </div>
             </div>
 
-            <!-- Card 3: Ahorro por Gestión -->
+            <!-- Card 3: Ahorro por gestión -->
             <div class="kpi-card" id="kpi-ahorro">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fa-solid fa-piggy-bank"></i>
+                <div class="kpi-card-main">
+                    <div class="kpi-card-icon-container">
+                        <img src="Ahorro.png" alt="Icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="fa-solid fa-piggy-bank kpi-card-icon-fallback"></i>
                     </div>
-                    <div class="kpi-card-title-group">
-                        <span class="kpi-card-title">Ahorro por Gestión</span>
+                    <div class="kpi-card-text">
+                        <span class="kpi-card-title">Ahorro por gestión</span>
+                        <div class="kpi-card-value" id="val-ahorrado">-</div>
                     </div>
-                    <div class="kpi-saving-pct-pill" id="pill-ahorro-pct">-</div>
                 </div>
-                <div class="kpi-card-value" id="val-ahorrado">-</div>
                 <div class="kpi-card-footer">
-                    <div class="kpi-subitem" id="sub-ahorrado-alt">Ahorrado PEN: -</div>
+                    <div class="kpi-subitem" id="sub-ahorrado-alt"><strong>Ahorrado PEN:</strong> -</div>
                     <div class="kpi-subitem" id="sub-ahorrado-prev">
-                        Ahorrado Año Ant.: <span class="val">-</span> / <span class="var-pct">-</span>
+                        <strong>Ahorrado Año Ant.:</strong> <span class="val">-</span> / <span class="var-pct">-</span>
                     </div>
                 </div>
+                <!-- Percentage Pill -->
+                <div class="kpi-saving-pct-pill" id="pill-ahorro-pct">-</div>
             </div>
 
-            <!-- Card 4: PPTO no Usado -->
+            <!-- Card 4: Ppto no usado -->
             <div class="kpi-card" id="kpi-no-usado">
-                <div class="kpi-card-header">
-                    <div class="kpi-card-icon">
-                        <i class="fa-solid fa-scissors"></i>
+                <div class="kpi-card-main">
+                    <div class="kpi-card-icon-container">
+                        <img src="No Gastado.png" alt="Icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="fa-solid fa-scissors kpi-card-icon-fallback"></i>
                     </div>
-                    <div class="kpi-card-title-group">
-                        <span class="kpi-card-title">PPTO no Usado</span>
+                    <div class="kpi-card-text">
+                        <span class="kpi-card-title">Ppto no usado</span>
+                        <div class="kpi-card-value" id="val-no-usado">-</div>
                     </div>
-                    <div class="kpi-saving-pct-pill" id="pill-no-usado-pct">-</div>
                 </div>
-                <div class="kpi-card-value" id="val-no-usado">-</div>
                 <div class="kpi-card-footer">
-                    <div class="kpi-subitem" id="sub-no-usado-alt">PPTO no Usado PEN: -</div>
+                    <div class="kpi-subitem" id="sub-no-usado-alt"><strong>PPTO no Usado PEN:</strong> -</div>
                     <div class="kpi-subitem" id="sub-no-usado-prev">
-                        PPTO no Usado Año Ant.: <span class="val">-</span> / <span class="var-pct">-</span>
+                        <strong>PPTO no Usado Año Ant.:</strong> <span class="val">-</span> / <span class="var-pct">-</span>
                     </div>
                 </div>
+                <!-- Percentage Pill -->
+                <div class="kpi-saving-pct-pill" id="pill-no-usado-pct">-</div>
             </div>
         </section>
 
         <!-- Main Chart Section -->
         <section class="chart-section card-box">
-            <h3 class="section-title">Avance mensual</h3>
+            <div class="chart-header">
+                <h3 class="section-title">Avance mensual</h3>
+                <div id="chart-html-legend" class="chart-legend"></div>
+            </div>
             <div class="chart-container">
                 <canvas id="monthly-chart"></canvas>
             </div>
@@ -1217,7 +1482,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Cargue los Excels para mostrar datos</td></tr>
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Cargue los Excels para comenzar</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1239,7 +1504,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Cargue los Excels para mostrar datos</td></tr>
+                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Cargue los Excels para comenzar</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1255,9 +1520,14 @@
                     </button>
                     <h2 id="detail-view-title">DETALLE DE PRESUPUESTO - [NOMBRE DINAMICO]</h2>
                 </div>
-                <div class="detail-actions">
+                <div class="detail-header-actions">
                     <button id="btn-detail-clear" class="tool-btn" title="Limpiar filtros del detalle">
                         <i class="fa-solid fa-filter-circle-xmark"></i>
+                    </button>
+                    <!-- Detail Currency toggle -->
+                    <button id="btn-detail-currency" class="tool-btn currency-toggle-btn" title="Cambiar Moneda (PEN/USD)">
+                        <span class="currency-indicator">$</span>
+                        <i class="fa-solid fa-arrows-rotate"></i>
                     </button>
                 </div>
             </div>
@@ -1304,16 +1574,14 @@
 
             <!-- Matrix / Pivot Table -->
             <div class="detail-matrix-container">
-                <div class="table-scroll-container">
-                    <table class="matrix-table" id="detail-matrix-table">
-                        <thead>
-                            <!-- Generated Dynamically -->
-                        </thead>
-                        <tbody>
-                            <!-- Generated Dynamically -->
-                        </tbody>
-                    </table>
-                </div>
+                <table class="matrix-table" id="detail-matrix-table">
+                    <thead>
+                        <!-- Generated Dynamically -->
+                    </thead>
+                    <tbody>
+                        <!-- Generated Dynamically -->
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -1323,33 +1591,34 @@
             <div class="loader-text">Procesando archivos de la carpeta...</div>
         </div>
 
-        <!-- Float Upload / Sync Bar (Administrative Controls) -->
-        <section class="admin-controls-card card-box">
-            <div class="admin-controls-content">
-                <div class="admin-title">
-                    <i class="fa-solid fa-folder-open"></i>
-                    <span>Carga e Sincronización de Datos</span>
+        <!-- Settings Modal (New Gear Panel) -->
+        <div class="modal-overlay hidden" id="settings-modal">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3>Configuración y Administración</h3>
+                    <button class="modal-close" id="btn-close-settings-modal">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
-                <div class="admin-actions">
-                    <!-- Folder upload input -->
-                    <label class="admin-btn upload-btn">
-                        <i class="fa-solid fa-folder-plus"></i>
-                        <span>Cargar Carpeta del Proyecto</span>
-                        <input type="file" id="folder-upload" webkitdirectory directory multiple class="hidden-input">
-                    </label>
-                    <!-- Exchange Rates setting button -->
-                    <button id="btn-show-rates" class="admin-btn rates-btn">
-                        <i class="fa-solid fa-calculator"></i>
-                        <span>Tipos de Cambio</span>
-                    </button>
-                    <!-- Clear cached storage -->
-                    <button id="btn-clear-storage" class="admin-btn" style="border-color: rgba(239, 68, 68, 0.3); color: var(--danger-color);" title="Borrar datos guardados">
-                        <i class="fa-solid fa-trash-can"></i>
-                        <span>Borrar Caché</span>
-                    </button>
+                <div class="modal-body">
+                    <div class="settings-grid">
+                        <label class="settings-btn upload-btn">
+                            <i class="fa-solid fa-folder-plus"></i>
+                            <span>Cargar Carpeta de Excels</span>
+                            <input type="file" id="folder-upload" webkitdirectory directory multiple class="hidden-input">
+                        </label>
+                        <button id="btn-settings-rates" class="settings-btn">
+                            <i class="fa-solid fa-calculator"></i>
+                            <span>Tipos de Cambio por Año</span>
+                        </button>
+                        <button id="btn-settings-clear" class="settings-btn danger-btn">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Borrar Caché del Navegador</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </section>
+        </div>
 
         <!-- Exchange Rate Modal -->
         <div class="modal-overlay hidden" id="rates-modal">
@@ -1418,6 +1687,7 @@
             exchangeRates: {"2023": 3.9, "2024": 3.7, "2025": 3.75, "2026": 3.6},
             lastUpdated: '',
             
+            // Row selections (double click)
             activeSelection: null,
             expandedCategories: {}
         };
@@ -1454,8 +1724,16 @@
             btnCurrency: document.getElementById('btn-currency'),
             btnMenu: document.getElementById('btn-menu'),
             menuSwitchView: document.getElementById('menu-switch-view'),
-            btnShowRates: document.getElementById('btn-show-rates'),
-            btnClearStorage: document.getElementById('btn-clear-storage'),
+            
+            // Header actions
+            btnThemeToggle: document.getElementById('btn-theme-toggle'),
+            btnSettingsToggle: document.getElementById('btn-settings-toggle'),
+            
+            // Settings Modal
+            settingsModal: document.getElementById('settings-modal'),
+            btnCloseSettingsModal: document.getElementById('btn-close-settings-modal'),
+            btnSettingsRates: document.getElementById('btn-settings-rates'),
+            btnSettingsClear: document.getElementById('btn-settings-clear'),
             folderUpload: document.getElementById('folder-upload'),
             
             valPresupuestado: document.getElementById('val-presupuestado'),
@@ -1487,6 +1765,7 @@
             
             btnDetailBack: document.getElementById('btn-detail-back'),
             btnDetailClear: document.getElementById('btn-detail-clear'),
+            btnDetailCurrency: document.getElementById('btn-detail-currency'),
             detailViewTitle: document.getElementById('detail-view-title'),
             detailFilterYear: document.getElementById('detail-filter-year'),
             detailFilterCategory: document.getElementById('detail-filter-category'),
@@ -1508,9 +1787,16 @@
             promptYearLabel: document.getElementById('prompt-year-label'),
             promptYearHidden: document.getElementById('prompt-year-hidden'),
             promptRateValue: document.getElementById('prompt-rate-value'),
-            promptRateForm: document.getElementById('prompt-rate-form')
+            promptRateForm: document.getElementById('prompt-rate-form'),
+            
+            chartHtmlLegend: document.getElementById('chart-html-legend')
         };
 
+        // Register Datalabels plugin
+        Chart.register(ChartDataLabels);
+
+        // State variables
+        let isLightTheme = false;
         let monthlyChart = null;
 
         // Formatter Helpers
@@ -1520,6 +1806,7 @@
             return prefix + Math.round(amount).toLocaleString('en-US');
         }
 
+        // Percentage formatting
         function formatPercentage(value, showPlus = false) {
             if (value === null || value === undefined || isNaN(value) || !isFinite(value)) return '--';
             const rounded = Math.round(value);
@@ -1529,21 +1816,22 @@
 
         function getArrowIcon(variation) {
             if (variation === null || variation === undefined || isNaN(variation) || !isFinite(variation)) return '';
-            return variation > 0 ? '<i class="fa-solid fa-arrow-up arrow-up"></i>' : variation < 0 ? '<i class="fa-solid fa-arrow-down arrow-down"></i>' : '';
+            return variation > 0 ? '🠱' : variation < 0 ? '🠳' : '';
         }
 
+        // Percentage arrow coloring logic
         function getArrowClass(variation) {
             if (variation === null || variation === undefined || isNaN(variation) || !isFinite(variation)) return '';
-            return variation > 0 ? 'arrow-up' : variation < 0 ? 'arrow-down' : '';
+            return variation > 0 ? 'green-pct' : variation < 0 ? 'red-pct' : '';
         }
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
+            loadTheme();
             loadDataFromStorage();
             
             if (state.rawOpex.length > 0 || state.rawCapex.length > 0) {
-                // Set default selected year to latest
                 if (state.selectedYear === 'all' && state.years.length > 0) {
                     state.selectedYear = String(state.years[state.years.length - 1]);
                 }
@@ -1553,29 +1841,63 @@
             }
         });
 
-        // Event Listeners setup
         function setupEventListeners() {
-            el.filterYear.addEventListener('change', (e) => { state.selectedYear = e.target.value; updateDashboard(); });
+            el.filterYear.addEventListener('change', (e) => { state.selectedYear = e.target.value; state.activeSelection = null; updateDashboard(); });
             el.filterQ.addEventListener('change', (e) => { state.selectedQ = e.target.value; updateDashboard(); });
             el.filterMonth.addEventListener('change', (e) => { state.selectedMonth = e.target.value; updateDashboard(); });
             el.filterCategory.addEventListener('change', (e) => { state.selectedCategory = e.target.value; updateDashboard(); });
             el.filterSubcategory.addEventListener('change', (e) => { state.selectedSubcategory = e.target.value; updateDashboard(); });
 
             el.btnClearFilters.addEventListener('click', clearAllFilters);
+            
+            // Sync currency selectors
             el.btnCurrency.addEventListener('click', toggleCurrency);
-            el.menuSwitchView.addEventListener('click', (e) => { e.preventDefault(); switchDashboardView(); });
+            el.btnDetailCurrency.addEventListener('click', toggleCurrency);
+            
+            // Click to toggle menu navigation
+            el.btnMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('menu-dropdown').classList.toggle('show');
+            });
+            
+            el.menuSwitchView.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('menu-dropdown').classList.remove('show');
+                switchDashboardView();
+            });
+
+            // Settings gear menu
+            el.btnSettingsToggle.addEventListener('click', () => el.settingsModal.classList.remove('hidden'));
+            el.btnCloseSettingsModal.addEventListener('click', () => el.settingsModal.classList.add('hidden'));
+            el.btnSettingsRates.addEventListener('click', () => {
+                el.settingsModal.classList.add('hidden');
+                showExchangeRatesModal();
+            });
+            el.btnSettingsClear.addEventListener('click', () => {
+                el.settingsModal.classList.add('hidden');
+                clearCache();
+            });
+
+            // Theme toggle button
+            el.btnThemeToggle.addEventListener('click', toggleTheme);
             
             el.btnDetailView.addEventListener('click', routeToDetailView);
             el.btnDetailBack.addEventListener('click', backToDashboard);
-            
-            el.btnShowRates.addEventListener('click', showExchangeRatesModal);
-            el.btnCloseRatesModal.addEventListener('click', () => el.ratesModal.classList.add('hidden'));
             
             el.folderUpload.addEventListener('change', handleFolderUpload);
             el.ratesAddForm.addEventListener('submit', handleAddExchangeRate);
             el.promptRateForm.addEventListener('submit', handlePromptExchangeRate);
             
-            el.btnClearStorage.addEventListener('click', clearCache);
+            window.addEventListener('click', (e) => {
+                if (e.target === el.ratesModal) el.ratesModal.classList.add('hidden');
+                if (e.target === el.settingsModal) el.settingsModal.classList.add('hidden');
+                if (e.target === el.promptRateModal) el.promptRateModal.classList.add('hidden');
+                
+                // Hide dropdown when clicking elsewhere
+                if (!el.btnMenu.contains(e.target)) {
+                    document.getElementById('menu-dropdown').classList.remove('show');
+                }
+            });
 
             el.detailFilterYear.addEventListener('change', onDetailFilterChange);
             el.detailFilterCategory.addEventListener('change', onDetailFilterChange);
@@ -1586,7 +1908,35 @@
             el.btnDetailClear.addEventListener('click', clearDetailFilters);
         }
 
-        // LocalStorage logic
+        // Theme controller (Claro/Oscuro)
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('db3_theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                isLightTheme = true;
+                el.btnThemeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            } else {
+                document.body.classList.remove('light-theme');
+                isLightTheme = false;
+                el.btnThemeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            }
+        }
+
+        function toggleTheme() {
+            isLightTheme = !isLightTheme;
+            if (isLightTheme) {
+                document.body.classList.add('light-theme');
+                el.btnThemeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                localStorage.setItem('db3_theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                el.btnThemeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                localStorage.setItem('db3_theme', 'dark');
+            }
+            updateDashboard();
+        }
+
+        // LocalStorage loading
         function saveDataToStorage() {
             try {
                 localStorage.setItem('db3_raw_opex', JSON.stringify(state.rawOpex));
@@ -1596,7 +1946,7 @@
                 localStorage.setItem('db3_last_updated', state.lastUpdated);
             } catch (e) {
                 console.error("Local Storage Save Error:", e);
-                alert("Los datos exceden el tamaño de almacenamiento del navegador. Solo los filtros principales estarán activos.");
+                alert("La caché del navegador está llena, pero los datos seguirán cargados en la sesión actual.");
             }
         }
 
@@ -1614,34 +1964,38 @@
                 if (rates) state.exchangeRates = JSON.parse(rates);
                 if (updated) state.lastUpdated = updated;
             } catch (e) {
-                console.error("Local Storage Load Error:", e);
+                console.error(e);
             }
         }
 
         function clearCache() {
-            if (confirm("¿Estás seguro de que deseas borrar todos los presupuestos cargados en caché?")) {
-                localStorage.clear();
+            if (confirm("¿Estás seguro de que deseas borrar todos los presupuestos guardados en este navegador?")) {
+                localStorage.removeItem('db3_raw_opex');
+                localStorage.removeItem('db3_raw_capex');
+                localStorage.removeItem('db3_years');
+                localStorage.removeItem('db3_last_updated');
                 state.rawOpex = [];
                 state.rawCapex = [];
                 state.years = [];
                 state.lastUpdated = '';
                 el.updateDateLabel.textContent = 'Cargue los archivos para comenzar';
                 clearAllFilters();
-                alert("Caché borrada.");
+                alert("Caché limpiada con éxito.");
                 location.reload();
             }
         }
 
-        // client-side Excel Parser using SheetJS
+        // client-side Excel folder parser
         async function handleFolderUpload(e) {
             const files = Array.from(e.target.files);
             const excelFiles = files.filter(f => f.name.toLowerCase().endsWith('.xlsx') || f.name.toLowerCase().endsWith('.xlsm'));
             if (excelFiles.length === 0) {
-                alert("No se encontraron archivos Excel en la carpeta seleccionada. Asegúrese de que tengan la extensión .xlsx o .xlsm");
+                alert("No se encontraron archivos Excel de presupuestos. Asegúrese de subir una carpeta que contenga archivos con la nomenclatura PPTO [Año] - Sistemas.");
                 return;
             }
             
             showLoader(true);
+            el.settingsModal.classList.add('hidden');
             let allOpex = [];
             let allCapex = [];
             let foundYears = new Set();
@@ -1657,7 +2011,7 @@
                     const data = await readFileAsArrayBuffer(file);
                     const workbook = XLSX.read(data, {type: 'array'});
                     
-                    // Read BD OPEX
+                    // Parse BD OPEX
                     if (workbook.SheetNames.includes("BD OPEX")) {
                         const sheet = workbook.Sheets["BD OPEX"];
                         const json = XLSX.utils.sheet_to_json(sheet, {defval: ""});
@@ -1669,11 +2023,11 @@
                                 year: year,
                                 cod_presupuesto: parseInt(row['Cod de Presupuesto']) || 0,
                                 cod_servicio: parseInt(row['Cod de Servicio']) || 0,
-                                desc_cod_servicio: String(row['Descripción Cod Servicio'] || ''),
-                                servicio: String(row['Descripción del Servicio'] || ''),
-                                categoria: String(row['Categoria..'] || ''),
-                                subcategoria: String(row['SubCategoria..'] || ''),
-                                sistema: String(row['Sistema'] || ''),
+                                desc_cod_servicio: String(row['Descripción Cod Servicio'] || '').trim(),
+                                servicio: String(row['Descripción del Servicio'] || '').trim(),
+                                categoria: String(row['Categoria..'] || '').trim(),
+                                subcategoria: String(row['SubCategoria..'] || '').trim(),
+                                sistema: String(row['Sistema'] || '').trim(),
                                 mes: mesVal,
                                 mes_num: MONTH_MAP[mesVal],
                                 
@@ -1693,7 +2047,7 @@
                         });
                     }
                     
-                    // Read BD CAPEX
+                    // Parse BD CAPEX
                     if (workbook.SheetNames.includes("BD CAPEX")) {
                         const sheet = workbook.Sheets["BD CAPEX"];
                         const json = XLSX.utils.sheet_to_json(sheet, {defval: ""});
@@ -1703,9 +2057,9 @@
                             
                             allCapex.push({
                                 year: year,
-                                detalle: String(row['DETALLE'] || ''),
-                                tipo: String(row['TIPO'] || ''),
-                                ceco: String(row['CECO'] || ''),
+                                detalle: String(row['DETALLE'] || '').trim(),
+                                tipo: String(row['TIPO'] || '').trim(),
+                                ceco: String(row['CECO'] || '').trim(),
                                 mes: mesVal,
                                 mes_num: MONTH_MAP[mesVal],
                                 
@@ -1743,7 +2097,7 @@
                 alert(`Carga exitosa. Se procesaron ${allOpex.length} registros de OPEX y ${allCapex.length} de CAPEX.`);
             } catch (err) {
                 console.error(err);
-                alert("Error al procesar los archivos de Excel. Verifique el formato.");
+                alert("Error al parsear los excels. Asegúrese de que correspondan a la estructura correcta.");
             } finally {
                 showLoader(false);
                 el.folderUpload.value = '';
@@ -1759,7 +2113,6 @@
             });
         }
 
-        // Populate standard filters dropdowns
         function populateFilters() {
             el.filterYear.innerHTML = '<option value="all">Todas</option>';
             el.filterCategory.innerHTML = '<option value="all">Todas</option>';
@@ -1794,6 +2147,7 @@
             el.filterSubcategory.value = state.selectedSubcategory;
         }
 
+        // Exchange Rate prompt checks
         function checkMissingExchangeRates() {
             for (const year of state.years) {
                 if (!state.exchangeRates[String(year)]) {
@@ -1833,16 +2187,22 @@
             updateDashboard();
         }
 
-        // Toggle Currencies
         function toggleCurrency() {
             if (state.currentView === 'CAPEX') return;
             state.currency = state.currency === 'USD' ? 'PEN' : 'USD';
-            el.btnCurrency.querySelector('.currency-indicator').textContent = state.currency === 'USD' ? '$' : 'S/.';
+            
+            // Sync indicators on both buttons
+            const indText = state.currency === 'USD' ? '$' : 'S/.';
+            el.btnCurrency.querySelector('.currency-indicator').textContent = indText;
+            el.btnDetailCurrency.querySelector('.currency-indicator').textContent = indText;
+            
             el.dashboardTitle.textContent = `Presupuesto TI – OPEX (${state.currency})`;
             updateDashboard();
+            if (!el.detailViewContainer.classList.contains('hidden')) {
+                updateDetailMatrixTable();
+            }
         }
 
-        // Switch OPEX/CAPEX views
         function switchDashboardView() {
             if (state.currentView === 'OPEX') {
                 state.currentView = 'CAPEX';
@@ -1884,20 +2244,48 @@
             updateDashboard();
         }
 
-        // Core render trigger
-        function updateDashboard() {
-            if (state.rawOpex.length === 0 && state.rawCapex.length === 0) return;
-            
-            const filtered = getFilteredData();
-            const prevYearFiltered = getPrevYearFilteredData();
-            const kpis = computeKPIs(filtered, prevYearFiltered);
-            
-            renderKPICards(kpis);
-            renderChart(filtered);
-            renderTables(filtered);
+        // YTD Lógicas de Corte
+        function getPriorYearCutoffMonth() {
+            if (state.selectedMonth !== 'all') {
+                return MONTH_MAP[state.selectedMonth];
+            }
+            // Cut-off for previous year is always current month of Today (July = 7)
+            const today = new Date();
+            return today.getMonth() + 1; // 7
         }
 
         function getFilteredData() {
+            const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
+            return dataset.filter(row => {
+                if (state.selectedYear !== 'all' && String(row.year) !== state.selectedYear) return false;
+                if (state.selectedQ !== 'all') {
+                    const q = Math.ceil(row.mes_num / 3);
+                    if (String(q) !== state.selectedQ) return false;
+                }
+                if (state.selectedMonth !== 'all' && row.mes !== state.selectedMonth) return false;
+                if (state.selectedCategory !== 'all') {
+                    const compCat = state.currentView === 'OPEX' ? row.categoria : row.tipo;
+                    if (compCat !== state.selectedCategory) return false;
+                }
+                if (state.currentView === 'OPEX' && state.selectedSubcategory !== 'all') {
+                    if (row.subcategoria !== state.selectedSubcategory) return false;
+                }
+                
+                // Double-click row filters applied to KPIs and chart ONLY
+                if (state.activeSelection) {
+                    const sel = state.activeSelection;
+                    if (sel.type === 'category' && row.categoria !== sel.value) return false;
+                    if (sel.type === 'subcategoria' && row.subcategoria !== sel.value) return false;
+                    if (sel.type === 'servicio' && row.servicio !== sel.value) return false;
+                    if (sel.type === 'detalle' && row.detalle !== sel.value) return false;
+                }
+                
+                return true;
+            });
+        }
+
+        // Get filter data for Tables (does not apply double click filter to avoid hiding rows)
+        function getFilteredTableData() {
             const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
             return dataset.filter(row => {
                 if (state.selectedYear !== 'all' && String(row.year) !== state.selectedYear) return false;
@@ -1917,20 +2305,23 @@
             });
         }
 
+        // Filters previous year data WITH cutoff constraint (for Spent, Saving, Unused)
         function getPrevYearFilteredData() {
             if (state.selectedYear === 'all') return [];
             const prevYearStr = String(parseInt(state.selectedYear) - 1);
             const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
             
+            const cutoffMonth = getPriorYearCutoffMonth();
+            
             return dataset.filter(row => {
                 if (String(row.year) !== prevYearStr) return false;
+                
+                // Apply cutoff month constraint
+                if (row.mes_num > cutoffMonth) return false;
+                
                 if (state.selectedQ !== 'all') {
                     const q = Math.ceil(row.mes_num / 3);
                     if (String(q) !== state.selectedQ) return false;
-                }
-                if (state.selectedMonth !== 'all') {
-                    const selectedMonthNum = MONTH_MAP[state.selectedMonth];
-                    if (row.mes_num > selectedMonthNum) return false;
                 }
                 if (state.selectedCategory !== 'all') {
                     const compCat = state.currentView === 'OPEX' ? row.categoria : row.tipo;
@@ -1939,12 +2330,78 @@
                 if (state.currentView === 'OPEX' && state.selectedSubcategory !== 'all') {
                     if (row.subcategoria !== state.selectedSubcategory) return false;
                 }
+                
+                // Double-click row filters
+                if (state.activeSelection) {
+                    const sel = state.activeSelection;
+                    if (sel.type === 'category' && row.categoria !== sel.value) return false;
+                    if (sel.type === 'subcategoria' && row.subcategoria !== sel.value) return false;
+                    if (sel.type === 'servicio' && row.servicio !== sel.value) return false;
+                    if (sel.type === 'detalle' && row.detalle !== sel.value) return false;
+                }
+                
                 return true;
             });
         }
 
-        // Calculations & KPI binds
-        function computeKPIs(currentData, prevData) {
+        // Filters previous year data WITHOUT YTD cutoff constraint (sums full 12 months for Budget comparisons)
+        function getPrevYearFullFilteredData() {
+            if (state.selectedYear === 'all') return [];
+            const prevYearStr = String(parseInt(state.selectedYear) - 1);
+            const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
+            
+            return dataset.filter(row => {
+                if (String(row.year) !== prevYearStr) return false;
+                // NO cutoff month filter! Sums full year budget!
+                
+                if (state.selectedQ !== 'all') {
+                    const q = Math.ceil(row.mes_num / 3);
+                    if (String(q) !== state.selectedQ) return false;
+                }
+                if (state.selectedCategory !== 'all') {
+                    const compCat = state.currentView === 'OPEX' ? row.categoria : row.tipo;
+                    if (compCat !== state.selectedCategory) return false;
+                }
+                if (state.currentView === 'OPEX' && state.selectedSubcategory !== 'all') {
+                    if (row.subcategoria !== state.selectedSubcategory) return false;
+                }
+                
+                // Double-click row filters
+                if (state.activeSelection) {
+                    const sel = state.activeSelection;
+                    if (sel.type === 'category' && row.categoria !== sel.value) return false;
+                    if (sel.type === 'subcategoria' && row.subcategoria !== sel.value) return false;
+                    if (sel.type === 'servicio' && row.servicio !== sel.value) return false;
+                    if (sel.type === 'detalle' && row.detalle !== sel.value) return false;
+                }
+                
+                return true;
+            });
+        }
+
+        // Render trigger
+        function updateDashboard() {
+            if (state.rawOpex.length === 0 && state.rawCapex.length === 0) return;
+            
+            const filtered = getFilteredData();
+            const prevYearFiltered = getPrevYearFilteredData(); // YTD-restricted
+            const prevYearFullFiltered = getPrevYearFullFilteredData(); // Full year (12 months)
+            const tableFiltered = getFilteredTableData();
+            const kpis = computeKPIs(filtered, prevYearFiltered, prevYearFullFiltered);
+            
+            // Detail Button glowing green icon/border trigger
+            if (state.activeSelection) {
+                el.btnDetailView.classList.add('btn-detail-glowing');
+            } else {
+                el.btnDetailView.classList.remove('btn-detail-glowing');
+            }
+
+            renderKPICards(kpis);
+            renderChart(filtered);
+            renderTables(tableFiltered);
+        }
+
+        function computeKPIs(currentData, prevData, prevDataFull) {
             const isPen = state.currency === 'PEN';
             const sumField = (dataset, fieldPen, fieldUsd) => {
                 return dataset.reduce((acc, row) => acc + (isPen ? (row[fieldPen] || 0.0) : (row[fieldUsd] || 0.0)), 0);
@@ -1985,7 +2442,10 @@
             const altAhorrado = state.currentView === 'OPEX' ? sumFieldAlt(currentData, cols.ahorrado[0], cols.ahorrado[1]) : 0;
             const altNoUsado = state.currentView === 'OPEX' ? sumFieldAlt(currentData, cols.no_usado[0], cols.no_usado[1]) : 0;
 
-            const prevPpto = sumField(prevData, cols.ppto[0], cols.ppto[1]);
+            // Full year budget sum for previous year
+            const prevPpto = sumField(prevDataFull, cols.ppto[0], cols.ppto[1]);
+            
+            // YTD sums for Spent, Ahorrado, and Unused
             const prevGastado = sumField(prevData, cols.gastado[0], cols.gastado[1]);
             const prevAhorrado = sumField(prevData, cols.ahorrado[0], cols.ahorrado[1]);
             
@@ -2009,61 +2469,64 @@
             };
         }
 
-        // Render cards DOM
         function renderKPICards(kpis) {
             const isPen = state.currency === 'PEN';
             const altCurrLabel = isPen ? 'USD' : 'PEN';
             
             el.valPresupuestado.textContent = formatCurrency(kpis.presupuesto.current, state.currency);
             if (state.currentView === 'OPEX') {
-                el.subPresupuestoAlt.textContent = `Presupuesto ${altCurrLabel}: ${formatCurrency(kpis.presupuesto.alt, altCurrLabel)}`;
+                el.subPresupuestoAlt.innerHTML = `<strong>Presupuesto ${altCurrLabel}:</strong> <span class="val">${formatCurrency(kpis.presupuesto.alt, altCurrLabel)}</span>`;
                 el.subPresupuestoAlt.classList.remove('hidden');
             } else {
                 el.subPresupuestoAlt.classList.add('hidden');
             }
             
-            if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
-                el.subPresupuestoPrev.innerHTML = `PPTO Año Ant.: <span class="val">${formatCurrency(kpis.presupuesto.prev, state.currency)}</span> / <span class="var-pct ${getArrowClass(kpis.presupuesto.varPct)}">${formatPercentage(kpis.presupuesto.varPct, true)} ${getArrowIcon(kpis.presupuesto.varPct)}</span>`;
-                el.subPresupuestoPrev.classList.remove('hidden');
-            } else {
-                el.subPresupuestoPrev.innerHTML = 'PPTO Año Ant.: <span class="val">--</span>';
-            }
+            // budget full year previous year show directly without variation percentage
+if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
+    const cls = getArrowClass(kpis.presupuesto.varPct);
+    el.subPresupuestoPrev.innerHTML = `<strong>PPTO Año Ant.:</strong> <span class="val">${formatCurrency(kpis.presupuesto.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.presupuesto.varPct, true)} ${getArrowIcon(kpis.presupuesto.varPct)}</span>`;
+    el.subPresupuestoPrev.classList.remove('hidden');
+} else {
+    el.subPresupuestoPrev.innerHTML = '<strong>PPTO Año Ant.:</strong> <span class="val">--</span>';
+}
 
             el.valGastado.textContent = formatCurrency(kpis.gastado.current, state.currency);
             if (state.currentView === 'OPEX') {
-                el.subGastadoAlt.textContent = `Gastado ${altCurrLabel}: ${formatCurrency(kpis.gastado.alt, altCurrLabel)}`;
+                el.subGastadoAlt.innerHTML = `<strong>Gastado ${altCurrLabel}:</strong> <span class="val">${formatCurrency(kpis.gastado.alt, altCurrLabel)}</span>`;
                 el.subGastadoAlt.classList.remove('hidden');
             } else {
                 el.subGastadoAlt.classList.add('hidden');
             }
             
             if (state.selectedYear !== 'all' && kpis.gastado.prev > 0) {
-                el.subGastadoPrev.innerHTML = `Gastado Año Ant.: <span class="val">${formatCurrency(kpis.gastado.prev, state.currency)}</span> / <span class="var-pct ${getArrowClass(kpis.gastado.varPct)}">${formatPercentage(kpis.gastado.varPct, true)} ${getArrowIcon(kpis.gastado.varPct)}</span>`;
+                const cls = getArrowClass(kpis.gastado.varPct);
+                el.subGastadoPrev.innerHTML = `<strong>Gastado Año Ant.:</strong> <span class="val">${formatCurrency(kpis.gastado.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.gastado.varPct, true)} ${getArrowIcon(kpis.gastado.varPct)}</span>`;
                 el.subGastadoPrev.classList.remove('hidden');
             } else {
-                el.subGastadoPrev.innerHTML = 'Gastado Año Ant.: <span class="val">--</span>';
+                el.subGastadoPrev.innerHTML = '<strong>Gastado Año Ant.:</strong> <span class="val">--</span>';
             }
 
             const progress = Math.min(100, Math.max(0, kpis.gastado.progressPct));
             el.pctGastado.textContent = formatPercentage(progress);
             
-            const perimeter = 100.53;
+            const perimeter = 138.23;
             const offset = perimeter - (progress / 100) * perimeter;
             el.gastadoProgressRing.style.strokeDashoffset = offset;
 
             el.valAhorrado.textContent = formatCurrency(kpis.ahorrado.current, state.currency);
             if (state.currentView === 'OPEX') {
-                el.subAhorradoAlt.textContent = `Ahorrado ${altCurrLabel}: ${formatCurrency(kpis.ahorrado.alt, altCurrLabel)}`;
+                el.subAhorradoAlt.innerHTML = `<strong>Ahorrado ${altCurrLabel}:</strong> <span class="val">${formatCurrency(kpis.ahorrado.alt, altCurrLabel)}</span>`;
                 el.subAhorradoAlt.classList.remove('hidden');
             } else {
                 el.subAhorradoAlt.classList.add('hidden');
             }
             
             if (state.selectedYear !== 'all' && kpis.ahorrado.prev > 0) {
-                el.subAhorradoPrev.innerHTML = `Ahorrado Año Ant.: <span class="val">${formatCurrency(kpis.ahorrado.prev, state.currency)}</span> / <span class="var-pct ${getArrowClass(kpis.ahorrado.varPct)}">${formatPercentage(kpis.ahorrado.varPct, true)} ${getArrowIcon(kpis.ahorrado.varPct)}</span>`;
+                const cls = getArrowClass(kpis.ahorrado.varPct);
+                el.subAhorradoPrev.innerHTML = `<strong>Ahorrado Año Ant.:</strong> <span class="val">${formatCurrency(kpis.ahorrado.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.ahorrado.varPct, true)} ${getArrowIcon(kpis.ahorrado.varPct)}</span>`;
                 el.subAhorradoPrev.classList.remove('hidden');
             } else {
-                el.subAhorradoPrev.innerHTML = 'Ahorrado Año Ant.: <span class="val">--</span>';
+                el.subAhorradoPrev.innerHTML = '<strong>Ahorrado Año Ant.:</strong> <span class="val">--</span>';
             }
             
             el.pillAhorroPct.textContent = formatPercentage(kpis.ahorrado.savingPct, true);
@@ -2074,21 +2537,22 @@
                 el.pillNoUsadoPct.textContent = '- %';
                 el.pillNoUsadoPct.className = 'kpi-saving-pct-pill';
                 el.subNoUsadoAlt.classList.add('hidden');
-                el.subNoUsadoPrev.innerHTML = 'PPTO no Usado Año Ant.: --';
+                el.subNoUsadoPrev.innerHTML = '<strong>PPTO no Usado Año Ant.:</strong> --';
             } else {
                 el.valNoUsado.textContent = formatCurrency(kpis.noUsado.current, state.currency);
                 if (state.currentView === 'OPEX') {
-                    el.subNoUsadoAlt.textContent = `PPTO no Usado ${altCurrLabel}: ${formatCurrency(kpis.noUsado.alt, altCurrLabel)}`;
+                    el.subNoUsadoAlt.innerHTML = `<strong>PPTO no Usado ${altCurrLabel}:</strong> <span class="val">${formatCurrency(kpis.noUsado.alt, altCurrLabel)}</span>`;
                     el.subNoUsadoAlt.classList.remove('hidden');
                 } else {
                     el.subNoUsadoAlt.classList.add('hidden');
                 }
                 
                 if (state.selectedYear !== 'all' && kpis.noUsado.prev > 0) {
-                    el.subNoUsadoPrev.innerHTML = `PPTO no Usado Año Ant.: <span class="val">${formatCurrency(kpis.noUsado.prev, state.currency)}</span>`;
+                    const cls = getArrowClass(kpis.noUsado.varPct);
+                    el.subNoUsadoPrev.innerHTML = `<strong>PPTO no Usado Año Ant.:</strong> <span class="val">${formatCurrency(kpis.noUsado.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.noUsado.varPct, true)} ${getArrowIcon(kpis.noUsado.varPct)}</span>`;
                     el.subNoUsadoPrev.classList.remove('hidden');
                 } else {
-                    el.subNoUsadoPrev.innerHTML = 'PPTO no Usado Año Ant.: <span class="val">--</span>';
+                    el.subNoUsadoPrev.innerHTML = '<strong>PPTO no Usado Año Ant.:</strong> <span class="val">--</span>';
                 }
                 
                 el.pillNoUsadoPct.textContent = formatPercentage(kpis.noUsado.noUsadoPct, true);
@@ -2096,7 +2560,7 @@
             }
         }
 
-        // Render local Chart.js
+        // Render local Chart.js with dynamic labels and colors
         function renderChart(filteredData) {
             const monthsSorted = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
             const monthlyAgg = {};
@@ -2120,9 +2584,28 @@
             const dataGastado = displayMonths.map(m => monthlyAgg[m].gastado);
             const dataAhorrado = displayMonths.map(m => monthlyAgg[m].ahorrado);
 
+            // Redraw HTML Legend aligned to title height
+            el.chartHtmlLegend.innerHTML = `
+                <div class="legend-item">
+                    <div class="legend-color-box" style="background: #87A227;"></div>
+                    <span>Presupuesto</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color-box" style="background: #2e3033;"></div>
+                    <span>Gastado</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line-box" style="background: #E10E7E;"></div>
+                    <span>Ahorrado</span>
+                </div>
+            `;
+
             if (monthlyChart) {
                 monthlyChart.destroy();
             }
+
+            const gridColor = isLightTheme ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.05)';
+            const labelColor = isLightTheme ? '#374151' : '#a3a3a3';
 
             const ctx = document.getElementById('monthly-chart').getContext('2d');
             monthlyChart = new Chart(ctx, {
@@ -2130,63 +2613,161 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Presupuestado', data: dataPpto, backgroundColor: '#8bae15', borderColor: '#8bae15', borderRadius: 4, borderWidth: 1, order: 2, barPercentage: 0.6, categoryPercentage: 0.6 },
-                        { label: 'Gastado', data: dataGastado, backgroundColor: '#2e3748', borderColor: '#2e3748', borderRadius: 4, borderWidth: 1, order: 3, barPercentage: 0.6, categoryPercentage: 0.6 },
-                        { label: 'Ahorrado', data: dataAhorrado, type: 'line', borderColor: '#1070e6', backgroundColor: '#1070e6', borderWidth: 3, pointBackgroundColor: '#1070e6', fill: false, tension: 0.2, order: 1 }
+                        {
+                            label: 'Presupuesto',
+                            data: dataPpto,
+                            backgroundColor: '#87A227', // Green AdP
+                            borderColor: '#87A227',
+                            borderRadius: { topLeft: 6, topRight: 6 },
+                            borderSkipped: false,
+                            borderWidth: 1,
+                            order: 2,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.6,
+                            datalabels: {
+                                color: labelColor,
+                                anchor: 'end',
+                                align: 'top',
+                                offset: -4,
+                                font: { family: 'HelveticaNeueLT Pro 47 LtCn', size: 10, weight: 'bold' },
+                                formatter: (v) => v > 0 ? Math.round(v).toLocaleString() : ''
+                            }
+                        },
+                        {
+                            label: 'Gastado',
+                            data: dataGastado,
+                            backgroundColor: '#2e3033', // Dark Gray AdP
+                            borderColor: '#2e3033',
+                            borderRadius: { topLeft: 6, topRight: 6 },
+                            borderSkipped: false,
+                            borderWidth: 1,
+                            order: 3,
+                            barPercentage: 0.6,
+                            categoryPercentage: 0.6,
+                            datalabels: {
+                                color: labelColor,
+                                anchor: 'end',
+                                align: 'top',
+                                offset: -4,
+                                font: { family: 'HelveticaNeueLT Pro 47 LtCn', size: 10, weight: 'bold' },
+                                formatter: (v) => v > 0 ? Math.round(v).toLocaleString() : ''
+                            }
+                        },
+                        {
+                            label: 'Ahorrado',
+                            data: dataAhorrado,
+                            type: 'line',
+                            borderColor: '#E10E7E', // Magenta AdP
+                            backgroundColor: '#E10E7E',
+                            borderWidth: 3,
+                            pointStyle: 'circle', // Circle marker shape
+                            pointRadius: 4,      // Slightly smaller circles
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#E10E7E',
+                            fill: false,
+                            tension: 0.2,
+                            order: 1,
+                            datalabels: {
+                                color: '#000000', // Black text color
+                                backgroundColor: '#f3f4f6', // Light gray background color
+                                borderHeight: 0,
+                                borderWidth: 0,
+                                borderRadius: 4,
+                                padding: 3,
+                                anchor: 'center',
+                                align: 'top',
+                                offset: 8,
+                                font: { family: 'HelveticaNeueLT Pro 47 LtCn', size: 10, weight: 'bold' },
+                                formatter: (v) => Math.round(v).toLocaleString()
+                            }
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 16
+                        }
+                    },
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#9ca3af', font: { family: 'Outfit', size: 12 }, boxWidth: 12, padding: 20 } },
+                        legend: {
+                            display: false // Hide default legend to use HTML Legend
+                        },
                         tooltip: {
                             backgroundColor: '#141a2a', titleColor: '#fff', bodyColor: '#9ca3af', borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1,
                             callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.raw, state.currency)}` }
+                        },
+                        datalabels: {
+                            display: true
                         }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { family: 'Outfit' } } },
-                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { family: 'Outfit' }, callback: (v) => v >= 1000 ? (v / 1000) + ' mil' : v } }
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { 
+                                color: labelColor, 
+                                font: { family: 'HelveticaNeueLT Pro 47 LtCn', size: 12, weight: 'bold' } // Month label bold and increased size 
+                            } 
+                        },
+                        y: { 
+                            grid: { color: gridColor }, 
+                            ticks: { 
+                                display: false // Ocultar etiquetas de valores del eje Y
+                            },
+                            border: {
+                                display: false // Ocultar línea del eje Y
+                            }
+                        }
                     },
                     onClick: (event, elements) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            state.activeSelection = { type: 'month', value: displayMonths[index] };
+                            const monthName = displayMonths[index];
+                            
+                            // Click month: Filter whole dashboard by month
+                            if (state.selectedMonth === monthName) {
+                                state.selectedMonth = 'all';
+                            } else {
+                                state.selectedMonth = monthName;
+                            }
+                            el.filterMonth.value = state.selectedMonth;
+                            updateDashboard();
                         }
                     }
                 }
             });
         }
 
-        // Render accordion tables
-        function renderTables(filteredData) {
+        // Render Accordion Tables (Isolated expansion logic)
+        function renderTables(tableFilteredData) {
             if (state.currentView === 'OPEX') {
                 el.leftTableTitle.textContent = "Proyectos";
                 el.rightTableTitle.textContent = "Otros Servicios";
                 
-                const projData = filteredData.filter(row => row.categoria === "Proyectos App" || row.categoria === "Proyectos Infra y Ciberseguridad");
-                renderExpandableTable(projData, el.leftTable, 'servicio');
+                const projData = tableFilteredData.filter(row => row.categoria === "Proyectos App" || row.categoria === "Proyectos Infra y Ciberseguridad");
+                renderExpandableTable(projData, el.leftTable, 'servicio', 'left');
 
-                const otherData = filteredData.filter(row => row.categoria !== "Proyectos App" && row.categoria !== "Proyectos Infra y Ciberseguridad");
-                renderExpandableTable(otherData, el.rightTable, 'subcategoria');
+                const otherData = tableFilteredData.filter(row => row.categoria !== "Proyectos App" && row.categoria !== "Proyectos Infra y Ciberseguridad");
+                renderExpandableTable(otherData, el.rightTable, 'subcategoria', 'right');
             } else {
                 el.leftTableTitle.textContent = "Proyectos Sistemas";
                 el.rightTableTitle.textContent = "Proyectos Otras Gerencias";
                 
-                const sysCapex = filteredData.filter(row => row.ceco === 'Sistemas');
+                const sysCapex = tableFilteredData.filter(row => row.ceco === 'Sistemas');
                 renderFlatTable(sysCapex, el.leftTable);
                 
-                const otherCapex = filteredData.filter(row => row.ceco !== 'Sistemas');
+                const otherCapex = tableFilteredData.filter(row => row.ceco !== 'Sistemas');
                 renderFlatTable(otherCapex, el.rightTable);
             }
         }
 
-        function renderExpandableTable(data, tableElement, childField) {
+        function renderExpandableTable(data, tableElement, childField, tableSide) {
             const tbody = tableElement.querySelector('tbody');
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Sin datos disponibles</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
                 return;
             }
 
@@ -2230,8 +2811,10 @@
                 totalNoUsado += parent.no_usado;
 
                 const isExpanded = state.expandedCategories[cat] === true;
+                const isSelected = state.activeSelection && state.activeSelection.type === 'category' && state.activeSelection.value === cat;
+
                 const parentRow = document.createElement('tr');
-                parentRow.className = `tree-row-parent ${isExpanded ? 'expanded' : ''}`;
+                parentRow.className = `tree-row-parent ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected-row' : ''}`;
                 parentRow.innerHTML = `
                     <td><span class="tree-toggle-icon"><i class="fa-solid fa-chevron-right"></i></span>${cat}</td>
                     <td class="num-col">${Math.round(parent.ppto).toLocaleString()}</td>
@@ -2241,18 +2824,33 @@
                     <td class="num-col">${Math.round(parent.no_usado).toLocaleString()}</td>
                 `;
 
-                parentRow.addEventListener('click', () => {
+                // Single Click: Toggle expand/collapse accordion (Isolated to this specific table)
+                parentRow.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     state.expandedCategories[cat] = !isExpanded;
-                    state.activeSelection = { type: 'category', value: cat };
-                    renderTables(data);
+                    renderExpandableTable(data, tableElement, childField, tableSide);
                 });
+
+                // Double Click: Select Category row to filter KPIs and chart
+                parentRow.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    if (state.activeSelection && state.activeSelection.type === 'category' && state.activeSelection.value === cat) {
+                        state.activeSelection = null; // Toggle off
+                    } else {
+                        state.activeSelection = { type: 'category', value: cat };
+                    }
+                    updateDashboard();
+                });
+
                 tbody.appendChild(parentRow);
 
                 if (isExpanded) {
                     Object.keys(parent.children).sort().forEach(childName => {
                         const child = parent.children[childName];
+                        const isChildSelected = state.activeSelection && state.activeSelection.type === childField && state.activeSelection.value === childName;
+                        
                         const childRow = document.createElement('tr');
-                        childRow.className = 'tree-row-child';
+                        childRow.className = `tree-row-child ${isChildSelected ? 'selected-row' : ''}`;
                         childRow.innerHTML = `
                             <td>${childName}</td>
                             <td class="num-col">${Math.round(child.ppto).toLocaleString()}</td>
@@ -2261,17 +2859,23 @@
                             <td class="num-col">${Math.round(child.ahorrado).toLocaleString()}</td>
                             <td class="num-col">${Math.round(child.no_usado).toLocaleString()}</td>
                         `;
-                        childRow.addEventListener('click', (e) => {
+                        
+                        // Double Click child row: Filter KPIs and chart
+                        childRow.addEventListener('dblclick', (e) => {
                             e.stopPropagation();
-                            state.activeSelection = { type: childField, value: childName, parentCat: cat };
-                            tableElement.querySelectorAll('tr').forEach(r => r.classList.remove('selected-row'));
-                            childRow.classList.add('selected-row');
+                            if (state.activeSelection && state.activeSelection.type === childField && state.activeSelection.value === childName) {
+                                state.activeSelection = null;
+                            } else {
+                                state.activeSelection = { type: childField, value: childName, parentCat: cat };
+                            }
+                            updateDashboard();
                         });
                         tbody.appendChild(childRow);
                     });
                 }
             });
 
+            // Sticky bottom Total Row
             const totalRow = document.createElement('tr');
             totalRow.className = 'table-row-total';
             totalRow.innerHTML = `
@@ -2289,7 +2893,7 @@
             const tbody = tableElement.querySelector('tbody');
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Sin datos disponibles</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
                 return;
             }
 
@@ -2303,7 +2907,10 @@
 
                 totalPpto += ppto; totalGastado += gastado; totalAhorroProy += ahorroProy; totalAhorrado += ahorrado; totalNoUsado += noUsado;
 
+                const isSelected = state.activeSelection && state.activeSelection.type === 'detalle' && state.activeSelection.value === row.detalle;
+
                 const tr = document.createElement('tr');
+                tr.className = isSelected ? 'selected-row' : '';
                 tr.innerHTML = `
                     <td>${row.detalle}</td>
                     <td class="num-col">${Math.round(ppto).toLocaleString()}</td>
@@ -2312,14 +2919,20 @@
                     <td class="num-col">${Math.round(ahorrado).toLocaleString()}</td>
                     <td class="num-col">${Math.round(noUsado).toLocaleString()}</td>
                 `;
-                tr.addEventListener('click', () => {
-                    state.activeSelection = { type: 'detalle', value: row.detalle };
-                    tableElement.querySelectorAll('tr').forEach(r => r.classList.remove('selected-row'));
-                    tr.classList.add('selected-row');
+
+                // Double click Capex row: filter
+                tr.addEventListener('dblclick', () => {
+                    if (state.activeSelection && state.activeSelection.type === 'detalle' && state.activeSelection.value === row.detalle) {
+                        state.activeSelection = null;
+                    } else {
+                        state.activeSelection = { type: 'detalle', value: row.detalle };
+                    }
+                    updateDashboard();
                 });
                 tbody.appendChild(tr);
             });
 
+            // Sticky bottom Total Row
             const totalRow = document.createElement('tr');
             totalRow.className = 'table-row-total';
             totalRow.innerHTML = `
@@ -2334,7 +2947,7 @@
         }
 
         // -------------------------------------------------------------
-        // DETAIL VIEW MATRIX
+        // DETAIL VIEW MATRIX TABLE
         // -------------------------------------------------------------
 
         function routeToDetailView() {
@@ -2377,6 +2990,9 @@
             document.querySelector('.chart-section').classList.add('hidden');
             el.dashboardTablesView.classList.add('hidden');
             el.detailViewContainer.classList.remove('hidden');
+
+            // Sync Detail view currency switcher text
+            el.btnDetailCurrency.querySelector('.currency-indicator').textContent = state.currency === 'USD' ? '$' : 'S/.';
 
             populateDetailFilters();
             updateDetailMatrixTable();
@@ -2432,6 +3048,7 @@
             selects.month.value = detailState.selectedMonth;
         }
 
+        // Detail Filter listeners
         function onDetailFilterChange() {
             detailState.selectedYear = el.detailFilterYear.value;
             detailState.selectedCategory = el.detailFilterCategory.value;
@@ -2442,6 +3059,7 @@
             updateDetailMatrixTable();
         }
 
+        // Clear filter details
         function clearDetailFilters() {
             detailState.selectedCategory = 'all';
             detailState.selectedSubcategory = 'all';
@@ -2544,7 +3162,7 @@
             Object.keys(serviceMap).sort().forEach(key => {
                 const service = serviceMap[key];
                 const tr = document.createElement('tr');
-                let rowHtml = `<td>${key}</td>`;
+                let rowHtml = `<td title="${key}">${key}</td>`;
                 let serviceTotalPpto = 0, serviceTotalGastado = 0, serviceTotalAhorrado = 0;
 
                 activeMonths.forEach(m => {
@@ -2571,6 +3189,7 @@
                 tbody.appendChild(tr);
             });
 
+            // Sticky Total Row Pegada al Fondo (sticky first cell "Total" as well)
             const totalRow = document.createElement('tr');
             totalRow.className = 'table-row-total';
             let totalRowHtml = `<td>Total</td>`;
@@ -2600,7 +3219,7 @@
             return prefix + Math.round(value).toLocaleString('en-US');
         }
 
-        // Rates Modal
+        // Administrative Modals
         function showExchangeRatesModal() {
             renderRatesInModal();
             el.ratesModal.classList.remove('hidden');
