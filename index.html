@@ -12,7 +12,6 @@
     <script src="xlsx.full.min.js"></script>
     <script src="chart.js"></script>
     <script src="chartjs-plugin-datalabels.min.js"></script>
-    <script src="html2canvas.min.js"></script>
     
     <style>
         /* CSS Custom Fonts Fallbacks */
@@ -372,20 +371,6 @@
             border-color: var(--accent-color);
             color: var(--accent-color);
             transform: translateY(-1px);
-        }
-
-        .tool-btn.loading {
-            pointer-events: none;
-            opacity: 0.6;
-        }
-
-        .tool-btn.loading i {
-            animation: tool-btn-spin 0.9s linear infinite;
-        }
-
-        @keyframes tool-btn-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
         }
 
         .currency-toggle-btn {
@@ -1455,10 +1440,6 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
     <button id="btn-theme-toggle" class="tool-btn" title="Cambiar Tema (Claro/Oscuro)">
         <i class="fa-solid fa-moon"></i>
     </button>
-    <!-- Send Summary Email Button -->
-    <button id="btn-send-email" class="tool-btn" title="Enviar Resumen por Correo">
-        <i class="fa-solid fa-envelope"></i>
-    </button>
 </div>
         </header>
 
@@ -2066,7 +2047,6 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             
             // Header actions
             btnThemeToggle: document.getElementById('btn-theme-toggle'),
-            btnSendEmail: document.getElementById('btn-send-email'),
             btnSettingsToggle: document.getElementById('btn-settings-toggle'),
             
             // Settings Modal
@@ -2357,7 +2337,6 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
 
             // Theme toggle button
             el.btnThemeToggle.addEventListener('click', toggleTheme);
-            el.btnSendEmail.addEventListener('click', sendSummaryEmail);
             
             el.btnDetailView.addEventListener('click', routeToDetailView);
             el.btnDetailBack.addEventListener('click', backToDashboard);
@@ -2666,187 +2645,6 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             state.activeSelection = null;
             populateFilters();
             updateDashboard();
-        }
-
-        // -------------------------------------------------------------
-        // SEND SUMMARY EMAIL (screenshot OPEX + CAPEX, open Outlook draft)
-        // -------------------------------------------------------------
-        function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-        function todayStamp() {
-            const d = new Date();
-            const pad = n => String(n).padStart(2, '0');
-            return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-        }
-
-        function todayLabel() {
-            return new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        }
-
-        function formatMoneyUSD(n) {
-            return '$' + Math.round(n).toLocaleString('en-US');
-        }
-
-        // Executive summary figures: always the real current year, Year-to-Date
-        // through the actual current month (independent of whatever filters
-        // the user currently has active on screen)
-        function computeViewSummary(view) {
-            const now = new Date();
-            const currentYear = String(now.getFullYear());
-            const currentMonthNum = now.getMonth() + 1;
-            const dataset = view === 'OPEX' ? state.rawOpex : state.rawCapex;
-            let ppto = 0, gastado = 0, ahorrado = 0;
-            dataset.forEach(row => {
-                if (String(row.year) !== currentYear) return;
-                if (row.mes_num > currentMonthNum) return;
-                ppto += row.ppto_usd || 0;
-                gastado += row.gastado_usd || 0;
-                ahorrado += row.ahorrado_usd || 0;
-            });
-            const pctEjec = ppto > 0 ? (gastado / ppto * 100) : 0;
-            return { ppto, gastado, ahorrado, pctEjec, year: currentYear };
-        }
-
-        function buildEmailBody(opex, capex) {
-            const lines = [];
-            lines.push(`Resumen de Presupuesto TI (Año ${opex.year}, acumulado a la fecha)`);
-            lines.push('');
-            lines.push('OPEX:');
-            lines.push(`- % Ejecutado: ${opex.pctEjec.toFixed(1)}% (Gastado ${formatMoneyUSD(opex.gastado)} de ${formatMoneyUSD(opex.ppto)})`);
-            lines.push(`- Ahorro acumulado: ${formatMoneyUSD(opex.ahorrado)}`);
-            lines.push('');
-            lines.push('CAPEX:');
-            lines.push(`- % Ejecutado: ${capex.pctEjec.toFixed(1)}% (Gastado ${formatMoneyUSD(capex.gastado)} de ${formatMoneyUSD(capex.ppto)})`);
-            lines.push(`- Ahorro acumulado: ${formatMoneyUSD(capex.ahorrado)}`);
-            lines.push('');
-            lines.push('Se descargó una imagen con el detalle visual del dashboard (OPEX y CAPEX); por favor, adjúntala a este correo antes de enviarlo.');
-            return lines.join('\n');
-        }
-
-        async function captureDashboardImage() {
-            const target = document.querySelector('.app-container');
-            const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim() || '#ffffff';
-            const canvas = await html2canvas(target, { backgroundColor: bg, scale: 1.5, useCORS: true, logging: false });
-            return canvas.toDataURL('image/png');
-        }
-
-        function combineImagesVertically(dataUrls) {
-            return new Promise((resolve) => {
-                const loaded = new Array(dataUrls.length);
-                let count = 0;
-                dataUrls.forEach((src, i) => {
-                    const im = new Image();
-                    im.onload = () => {
-                        loaded[i] = im;
-                        count++;
-                        if (count === dataUrls.length) {
-                            const gap = 24;
-                            const width = Math.max(...loaded.map(x => x.width));
-                            const height = loaded.reduce((sum, x) => sum + x.height, 0) + gap * (loaded.length - 1);
-                            const canvas = document.createElement('canvas');
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.fillStyle = '#ffffff';
-                            ctx.fillRect(0, 0, width, height);
-                            let y = 0;
-                            loaded.forEach(im => {
-                                ctx.drawImage(im, 0, y);
-                                y += im.height + gap;
-                            });
-                            resolve(canvas.toDataURL('image/png'));
-                        }
-                    };
-                    im.src = src;
-                });
-            });
-        }
-
-        function downloadDataUrl(dataUrl, filename) {
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        async function sendSummaryEmail() {
-            if (state.rawOpex.length === 0 && state.rawCapex.length === 0) {
-                alert('Cargue los archivos de Excel antes de generar el resumen.');
-                return;
-            }
-            if (typeof html2canvas === 'undefined') {
-                alert('No se pudo generar la imagen del dashboard: falta el archivo html2canvas.min.js junto a Dashboard.html.');
-                return;
-            }
-
-            el.btnSendEmail.classList.add('loading');
-            closeAllMultiSelects();
-
-            // Preserve everything the user currently has selected — the view
-            // switching below is only to grab both screenshots, not a real navigation
-            const savedView = state.currentView;
-            const savedCurrency = state.currency;
-            const savedYear = state.selectedYear.slice();
-            const savedQ = state.selectedQ.slice();
-            const savedMonth = state.selectedMonth.slice();
-            const savedCategory = state.selectedCategory.slice();
-            const savedSubcategory = state.selectedSubcategory.slice();
-            const savedActiveSelection = state.activeSelection;
-
-            const restoreState = () => {
-                state.selectedYear = savedYear;
-                state.selectedQ = savedQ;
-                state.selectedMonth = savedMonth;
-                state.selectedCategory = savedCategory;
-                state.selectedSubcategory = savedSubcategory;
-                state.activeSelection = savedActiveSelection;
-                buildAllFilterPanels();
-                updateDashboard();
-                if (savedView === 'OPEX' && savedCurrency !== state.currency) {
-                    toggleCurrency();
-                }
-            };
-
-            try {
-                if (state.currentView !== 'OPEX') {
-                    switchDashboardView();
-                    await wait(650);
-                }
-                const opexImg = await captureDashboardImage();
-
-                switchDashboardView(); // now on CAPEX
-                await wait(650);
-                const capexImg = await captureDashboardImage();
-
-                if (state.currentView !== savedView) {
-                    switchDashboardView();
-                }
-                restoreState();
-
-                const combinedDataUrl = await combineImagesVertically([opexImg, capexImg]);
-                const fileName = `Resumen_Presupuesto_TI_${todayStamp()}.png`;
-                downloadDataUrl(combinedDataUrl, fileName);
-
-                const opexSummary = computeViewSummary('OPEX');
-                const capexSummary = computeViewSummary('CAPEX');
-                const subject = `Resumen Presupuesto TI - ${todayLabel()}`;
-                const body = buildEmailBody(opexSummary, capexSummary);
-
-                window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-                setTimeout(() => {
-                    alert(`Se descargó la imagen "${fileName}" con el resumen visual de OPEX y CAPEX.\n\nSe abrió un borrador de correo en Outlook con el resumen en texto. Adjunta manualmente esa imagen antes de enviarlo (los enlaces de correo no permiten adjuntar archivos automáticamente).`);
-                }, 500);
-            } catch (err) {
-                console.error(err);
-                alert('Ocurrió un error generando el resumen. Intenta nuevamente.');
-                if (state.currentView !== savedView) switchDashboardView();
-                restoreState();
-            } finally {
-                el.btnSendEmail.classList.remove('loading');
-            }
         }
 
         function clearAllFilters() {
