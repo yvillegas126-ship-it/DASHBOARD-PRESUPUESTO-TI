@@ -25,7 +25,7 @@
         }
 
         :root {
-            /* Dark Mode variables (default) - Solid Blackn */
+            /* Dark Mode variables (default) - Solid Black */
             --bg-color: #000000;
             --card-bg: #000000;
             --card-bg-solid: #000000;
@@ -801,6 +801,30 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             top: 0;
             z-index: 5;
   	    white-space: nowrap;
+        }
+
+        .sortable-th {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable-th:hover {
+            color: var(--text-primary);
+        }
+
+        .sort-arrow {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 0.7rem;
+            width: 10px;
+        }
+
+        .sort-arrow.active {
+            color: var(--accent-color);
+        }
+
+        #left-table .sort-arrow.active {
+            color: var(--text-primary);
         }
 
         /* Left Table Header (Black/White border) */
@@ -1601,13 +1625,13 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                     <table class="dashboard-table" id="left-table">
                         <thead>
                             <tr>
-                                <th>Categoría</th>
-                                <th>PPTO</th>
-                                <th>Gastado</th>
-                                <th>% Ejec.</th>
-                                <th>Ahorro Proyectado</th>
-                                <th>Ahorrado</th>
-                                <th>PPTO no Usado</th>
+                                <th class="sortable-th" data-col="categoria">Categoría<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="ppto">PPTO<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="gastado">Gastado<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="exec">% Ejec.<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="ahorro_proy">Ahorro Proyectado<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="ahorrado">Ahorrado<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="no_usado">PPTO no Usado<span class="sort-arrow"></span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1624,13 +1648,13 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                     <table class="dashboard-table" id="right-table">
                         <thead>
                             <tr>
-                                <th>Categoría</th>
-                                <th>PPTO</th>
-                                <th>Gastado</th>
-                                <th>% Ejec.</th>
-                                <th>Ahorro Proyectado</th>
-                                <th>Ahorrado</th>
-                                <th>PPTO no Usado</th>
+                                <th class="sortable-th" data-col="categoria">Categoría<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="ppto">PPTO<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="gastado">Gastado<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="exec">% Ejec.<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="ahorro_proy">Ahorro Proyectado<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="ahorrado">Ahorrado<span class="sort-arrow"></span></th>
+                                <th class="sortable-th" data-col="no_usado">PPTO no Usado<span class="sort-arrow"></span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1825,7 +1849,13 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             
             // Row selections (double click)
             activeSelection: null,
-            expandedCategories: {}
+            expandedCategories: {},
+
+            // Table column sort (double click on header): { column: 'ppto'|'gastado'|'exec'|'ahorro_proy'|'ahorrado'|'no_usado'|'categoria'|null, direction: 'asc'|'desc'|null }
+            tableSort: {
+                left: { column: null, direction: null },
+                right: { column: null, direction: null }
+            }
         };
 
         // Detail View State
@@ -1872,6 +1902,23 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             }
             if (state.years.length > 0) return String(state.years[state.years.length - 1]);
             return null;
+        }
+
+        // Builds the "Tipo de Cambio <año>: <valor>" prefix for the header,
+        // one entry per year currently selected in the AÑO filter, appended as more years are picked
+        function updateHeaderInfoLabel() {
+            if (!el.updateDateLabel) return;
+            if (state.rawOpex.length === 0 && state.rawCapex.length === 0) return;
+
+            let ratePrefix = '';
+            if (!isAllSelected(state.selectedYear)) {
+                const years = state.selectedYear.slice().sort((a, b) => b - a);
+                const parts = years
+                    .map(y => state.exchangeRates[y] !== undefined ? `Tipo de Cambio ${y}: ${state.exchangeRates[y]}` : null)
+                    .filter(Boolean);
+                if (parts.length > 0) ratePrefix = parts.join(' | ') + ' | ';
+            }
+            el.updateDateLabel.textContent = `${ratePrefix}Actualizado el ${state.lastUpdated}`;
         }
 
         // Registry of multi-select widgets: key -> { panelId, triggerId, getArr, setArr, onChange }
@@ -2233,12 +2280,15 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                     state.selectedYear = [String(state.years[state.years.length - 1])];
                 }
                 el.updateDateLabel.textContent = `Actualizado el ${state.lastUpdated}`;
+                updateHeaderInfoLabel();
                 populateFilters();
                 updateDashboard();
             }
         });
 
         function setupEventListeners() {
+            setupTableSortListeners();
+
             // Multi-select filter dropdowns: toggle open/close on trigger click
             Object.keys(multiSelectRegistry).forEach(key => {
                 const cfg = multiSelectRegistry[key];
@@ -2491,6 +2541,7 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                     state.selectedYear = [String(state.years[state.years.length - 1])];
                 }
                 
+                updateHeaderInfoLabel();
                 populateFilters();
                 checkMissingExchangeRates();
                 updateDashboard();
@@ -2732,6 +2783,8 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
         // Render trigger
         function updateDashboard() {
             if (state.rawOpex.length === 0 && state.rawCapex.length === 0) return;
+            
+            updateHeaderInfoLabel();
             
             const filtered = getFilteredData();
             const prevYearFiltered = getPrevYearFilteredData(); // YTD-restricted
@@ -3091,6 +3144,66 @@ if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
         }
 
         // Render Accordion Tables (Isolated expansion logic)
+        // -------------------------------------------------------------
+        // TABLE COLUMN SORTING (double-click header, Power BI style)
+        // -------------------------------------------------------------
+        function getSortValue(obj, column) {
+            if (!obj) return 0;
+            if (column === 'exec') {
+                return obj.ppto > 0 ? (obj.gastado / obj.ppto) : 0;
+            }
+            return obj[column] || 0;
+        }
+
+        // Compares two entries (by key) from a map of {key: {ppto, gastado, ...}} according to the active sort
+        function compareBySort(aKey, bKey, dataMap, sort) {
+            if (sort.column === 'categoria') {
+                return sort.direction === 'desc' ? bKey.localeCompare(aKey) : aKey.localeCompare(bKey);
+            }
+            const va = getSortValue(dataMap[aKey], sort.column);
+            const vb = getSortValue(dataMap[bKey], sort.column);
+            return sort.direction === 'desc' ? (vb - va) : (va - vb);
+        }
+
+        // Refreshes the little ▲/▼ arrow next to the active sorted column header
+        function updateSortArrows(tableSide) {
+            const table = tableSide === 'left' ? el.leftTable : el.rightTable;
+            const sort = state.tableSort[tableSide];
+            table.querySelectorAll('thead .sortable-th').forEach(th => {
+                const arrow = th.querySelector('.sort-arrow');
+                if (!arrow) return;
+                if (sort.column && th.dataset.col === sort.column) {
+                    arrow.textContent = sort.direction === 'desc' ? '▼' : '▲';
+                    arrow.classList.add('active');
+                } else {
+                    arrow.textContent = '';
+                    arrow.classList.remove('active');
+                }
+            });
+        }
+
+        // Wires the double-click handlers on each sortable header (called once at startup;
+        // the <thead> markup is static, only <tbody> gets re-rendered on updates)
+        function setupTableSortListeners() {
+            [['left', el.leftTable], ['right', el.rightTable]].forEach(([side, table]) => {
+                table.querySelectorAll('thead .sortable-th').forEach(th => {
+                    th.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
+                        const col = th.dataset.col;
+                        const sort = state.tableSort[side];
+                        if (sort.column === col) {
+                            sort.direction = sort.direction === 'desc' ? 'asc' : 'desc';
+                        } else {
+                            sort.column = col;
+                            sort.direction = col === 'categoria' ? 'asc' : 'desc';
+                        }
+                        updateSortArrows(side);
+                        updateDashboard();
+                    });
+                });
+            });
+        }
+
         function renderTables(tableFilteredData) {
             if (state.currentView === 'OPEX') {
                 el.leftTableTitle.textContent = "Proyectos";
@@ -3106,10 +3219,10 @@ if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
                 el.rightTableTitle.textContent = "Proyectos Otras Gerencias";
                 
                 const sysCapex = tableFilteredData.filter(row => row.ceco === 'Sistemas');
-                renderFlatTable(sysCapex, el.leftTable);
+                renderFlatTable(sysCapex, el.leftTable, 'left');
                 
                 const otherCapex = tableFilteredData.filter(row => row.ceco !== 'Sistemas');
-                renderFlatTable(otherCapex, el.rightTable);
+                renderFlatTable(otherCapex, el.rightTable, 'right');
             }
         }
 
@@ -3130,6 +3243,7 @@ if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
             tbody.innerHTML = '';
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
+                updateSortArrows(tableSide);
                 return;
             }
 
@@ -3164,7 +3278,15 @@ if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
 
             let totalPpto = 0, totalGastado = 0, totalAhorroProy = 0, totalAhorrado = 0, totalNoUsado = 0;
 
-            Object.keys(hierarchy).sort().forEach(cat => {
+            const sort = state.tableSort[tableSide];
+            let catKeys = Object.keys(hierarchy);
+            if (sort && sort.column) {
+                catKeys.sort((a, b) => compareBySort(a, b, hierarchy, sort));
+            } else {
+                catKeys.sort();
+            }
+
+            catKeys.forEach(cat => {
                 const parent = hierarchy[cat];
                 totalPpto += parent.ppto;
                 totalGastado += parent.gastado;
@@ -3208,7 +3330,15 @@ if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
                 tbody.appendChild(parentRow);
 
                 if (isExpanded) {
-                    Object.keys(parent.children).sort().forEach(childName => {
+                    let childKeys = Object.keys(parent.children);
+                    if (sort && sort.column === 'categoria') {
+                        childKeys.sort((a, b) => sort.direction === 'desc' ? b.localeCompare(a) : a.localeCompare(b));
+                    } else if (sort && sort.column) {
+                        childKeys.sort((a, b) => compareBySort(a, b, parent.children, sort));
+                    } else {
+                        childKeys.sort();
+                    }
+                    childKeys.forEach(childName => {
                         const child = parent.children[childName];
                         const isChildSelected = state.activeSelection && state.activeSelection.type === childField && state.activeSelection.value === childName;
                         
@@ -3252,18 +3382,43 @@ if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
                 <td class="num-col">${Math.round(totalNoUsado).toLocaleString()}</td>
             `;
             tbody.appendChild(totalRow);
+            updateSortArrows(tableSide);
         }
 
-        function renderFlatTable(data, tableElement) {
+        function renderFlatTable(data, tableElement, tableSide) {
             const tbody = tableElement.querySelector('tbody');
             tbody.innerHTML = '';
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
+                updateSortArrows(tableSide);
                 return;
             }
 
+            const sort = state.tableSort[tableSide];
+            const flatSortValue = (row, column) => {
+                const ppto = row.ppto_usd || 0;
+                const gastado = row.gastado_usd || 0;
+                if (column === 'ppto') return ppto;
+                if (column === 'gastado') return gastado;
+                if (column === 'exec') return ppto > 0 ? (gastado / ppto) : 0;
+                if (column === 'ahorro_proy') return row.ahorro_proy_usd || 0;
+                if (column === 'ahorrado') return row.ahorrado_usd || 0;
+                if (column === 'no_usado') return row.ppto_no_usado_usd || 0;
+                return 0;
+            };
+            let sortedData = data.slice();
+            if (sort && sort.column === 'categoria') {
+                sortedData.sort((a, b) => sort.direction === 'desc'
+                    ? (b.detalle || '').localeCompare(a.detalle || '')
+                    : (a.detalle || '').localeCompare(b.detalle || ''));
+            } else if (sort && sort.column) {
+                sortedData.sort((a, b) => sort.direction === 'desc'
+                    ? flatSortValue(b, sort.column) - flatSortValue(a, sort.column)
+                    : flatSortValue(a, sort.column) - flatSortValue(b, sort.column));
+            }
+
             let totalPpto = 0, totalGastado = 0, totalAhorroProy = 0, totalAhorrado = 0, totalNoUsado = 0;
-            data.forEach(row => {
+            sortedData.forEach(row => {
                 const ppto = row.ppto_usd || 0;
                 const gastado = row.gastado_usd || 0;
                 const ahorroProy = row.ahorro_proy_usd || 0;
@@ -3311,6 +3466,7 @@ if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
                 <td class="num-col">${Math.round(totalNoUsado).toLocaleString()}</td>
             `;
             tbody.appendChild(totalRow);
+            updateSortArrows(tableSide);
         }
 
         // -------------------------------------------------------------
