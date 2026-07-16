@@ -255,6 +255,97 @@
             border-color: var(--accent-color);
         }
 
+        /* Multi-select filter dropdowns */
+        .ms-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .ms-trigger {
+            background: var(--bg-color);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 4px 28px 4px 8px;
+            border-radius: var(--border-radius-sm);
+            font-family: var(--font-secondary);
+            font-size: 0.8rem;
+            outline: none;
+            cursor: pointer;
+            min-width: 100px;
+            max-width: 160px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+
+        .ms-trigger::after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid var(--text-secondary);
+            transform: translateY(-50%);
+        }
+
+        .ms-trigger:hover, .ms-dropdown.open .ms-trigger {
+            border-color: var(--accent-color);
+        }
+
+        .ms-panel {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: calc(100% + 4px);
+            background: var(--card-bg-solid);
+            border: 1px solid var(--card-border);
+            min-width: 180px;
+            max-height: 260px;
+            overflow-y: auto;
+            box-shadow: none;
+            border-radius: var(--border-radius-sm);
+            z-index: 100;
+            padding: 4px 0;
+        }
+
+        .ms-dropdown.open .ms-panel {
+            display: block;
+        }
+
+        .ms-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            font-family: var(--font-secondary);
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .ms-option:hover {
+            background: rgba(135, 162, 39, 0.12);
+        }
+
+        .ms-option input[type="checkbox"] {
+            accent-color: var(--accent-color);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .ms-option-all {
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
         .toolbar-actions {
             display: flex;
             align-items: center;
@@ -802,6 +893,43 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             font-variant-numeric: tabular-nums;
         }
 
+        /* % Ejecutado column: value + progress bar */
+        .exec-col {
+            min-width: 92px;
+        }
+
+        .exec-pct {
+            font-size: 0.8rem;
+            font-weight: inherit;
+            color: inherit;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .exec-bar-track {
+            width: 100%;
+            height: 5px;
+            border-radius: 4px;
+            background: var(--card-border);
+            overflow: hidden;
+        }
+
+        .exec-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* Proyectos table: bar black in light mode, white in dark mode */
+        #left-table .exec-bar-fill {
+            background: var(--text-primary);
+        }
+
+        /* Otros Servicios table: bar always green */
+        #right-table .exec-bar-fill {
+            background: var(--accent-color);
+        }
+
         /* Detail View Section */
         .detail-view-section {
             height: 100%;
@@ -904,6 +1032,17 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             font-size: 0.8rem;
             outline: none;
             cursor: pointer;
+            width: 100%;
+        }
+
+        .detail-filter-group .ms-trigger {
+            width: 100%;
+            max-width: none;
+            padding: 6px 28px 6px 10px;
+        }
+
+        .detail-filter-group .ms-dropdown {
+            display: block;
             width: 100%;
         }
 
@@ -1285,50 +1424,39 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             <!-- Filter Bar -->
             <div class="filters-container" id="filters-container">
                 <div class="filter-group">
-                    <label for="filter-year">AÑO:</label>
-                    <select id="filter-year">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>AÑO:</label>
+                    <div class="ms-dropdown" id="filter-year">
+                        <button type="button" class="ms-trigger" id="filter-year-trigger">Todas</button>
+                        <div class="ms-panel" id="filter-year-panel"></div>
+                    </div>
                 </div>
                 <div class="filter-group" id="filter-q-group">
-                    <label for="filter-q">Q:</label>
-                    <select id="filter-q">
-                        <option value="all">Todas</option>
-                        <option value="1">1er Quarter</option>
-                        <option value="2">2do Quarter</option>
-                        <option value="3">3er Quarter</option>
-                        <option value="4">4to Quarter</option>
-                    </select>
+                    <label>Q:</label>
+                    <div class="ms-dropdown" id="filter-q">
+                        <button type="button" class="ms-trigger" id="filter-q-trigger">Todas</button>
+                        <div class="ms-panel" id="filter-q-panel"></div>
+                    </div>
                 </div>
                 <div class="filter-group">
-                    <label for="filter-month">MES:</label>
-                    <select id="filter-month">
-                        <option value="all">Todas</option>
-                        <option value="ENERO">Enero</option>
-                        <option value="FEBRERO">Febrero</option>
-                        <option value="MARZO">Marzo</option>
-                        <option value="ABRIL">Abril</option>
-                        <option value="MAYO">Mayo</option>
-                        <option value="JUNIO">Junio</option>
-                        <option value="JULIO">Julio</option>
-                        <option value="AGOSTO">Agosto</option>
-                        <option value="SETIEMBRE">Setiembre</option>
-                        <option value="OCTUBRE">Octubre</option>
-                        <option value="NOVIEMBRE">Noviembre</option>
-                        <option value="DICIEMBRE">Diciembre</option>
-                    </select>
+                    <label>MES:</label>
+                    <div class="ms-dropdown" id="filter-month">
+                        <button type="button" class="ms-trigger" id="filter-month-trigger">Todas</button>
+                        <div class="ms-panel" id="filter-month-panel"></div>
+                    </div>
                 </div>
                 <div class="filter-group">
-                    <label for="filter-category">CATEGORIA:</label>
-                    <select id="filter-category">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>CATEGORIA:</label>
+                    <div class="ms-dropdown" id="filter-category">
+                        <button type="button" class="ms-trigger" id="filter-category-trigger">Todas</button>
+                        <div class="ms-panel" id="filter-category-panel"></div>
+                    </div>
                 </div>
                 <div class="filter-group" id="filter-subcategory-group">
-                    <label for="filter-subcategory">SUBCATEGORIA:</label>
-                    <select id="filter-subcategory">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>SUBCATEGORIA:</label>
+                    <div class="ms-dropdown" id="filter-subcategory">
+                        <button type="button" class="ms-trigger" id="filter-subcategory-trigger">Todas</button>
+                        <div class="ms-panel" id="filter-subcategory-panel"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1476,13 +1604,14 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                                 <th>Categoría</th>
                                 <th>PPTO</th>
                                 <th>Gastado</th>
+                                <th>% Ejec.</th>
                                 <th>Ahorro Proyectado</th>
                                 <th>Ahorrado</th>
                                 <th>PPTO no Usado</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Cargue los Excels para comenzar</td></tr>
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Cargue los Excels para comenzar</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1498,13 +1627,14 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                                 <th>Categoría</th>
                                 <th>PPTO</th>
                                 <th>Gastado</th>
+                                <th>% Ejec.</th>
                                 <th>Ahorro Proyectado</th>
                                 <th>Ahorrado</th>
                                 <th>PPTO no Usado</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Cargue los Excels para comenzar</td></tr>
+                            <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Cargue los Excels para comenzar</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1535,40 +1665,46 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             <!-- Detail Filters -->
             <div class="detail-filters-container">
                 <div class="detail-filter-group">
-                    <label for="detail-filter-year">Año</label>
-                    <select id="detail-filter-year">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>Año</label>
+                    <div class="ms-dropdown" id="detail-filter-year">
+                        <button type="button" class="ms-trigger" id="detail-filter-year-trigger">Todas</button>
+                        <div class="ms-panel" id="detail-filter-year-panel"></div>
+                    </div>
                 </div>
                 <div class="detail-filter-group">
-                    <label for="detail-filter-category">Categoría</label>
-                    <select id="detail-filter-category">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>Categoría</label>
+                    <div class="ms-dropdown" id="detail-filter-category">
+                        <button type="button" class="ms-trigger" id="detail-filter-category-trigger">Todas</button>
+                        <div class="ms-panel" id="detail-filter-category-panel"></div>
+                    </div>
                 </div>
                 <div class="detail-filter-group">
-                    <label for="detail-filter-subcategory">Sub Categoría</label>
-                    <select id="detail-filter-subcategory">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>Sub Categoría</label>
+                    <div class="ms-dropdown" id="detail-filter-subcategory">
+                        <button type="button" class="ms-trigger" id="detail-filter-subcategory-trigger">Todas</button>
+                        <div class="ms-panel" id="detail-filter-subcategory-panel"></div>
+                    </div>
                 </div>
                 <div class="detail-filter-group">
-                    <label for="detail-filter-service">Servicio</label>
-                    <select id="detail-filter-service">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>Servicio</label>
+                    <div class="ms-dropdown" id="detail-filter-service">
+                        <button type="button" class="ms-trigger" id="detail-filter-service-trigger">Todas</button>
+                        <div class="ms-panel" id="detail-filter-service-panel"></div>
+                    </div>
+                </div>
+                <div class="detail-filter-group" id="detail-filter-system-group">
+                    <label>Sistema</label>
+                    <div class="ms-dropdown" id="detail-filter-system">
+                        <button type="button" class="ms-trigger" id="detail-filter-system-trigger">Todas</button>
+                        <div class="ms-panel" id="detail-filter-system-panel"></div>
+                    </div>
                 </div>
                 <div class="detail-filter-group">
-                    <label for="detail-filter-system">Sistema</label>
-                    <select id="detail-filter-system">
-                        <option value="all">Todas</option>
-                    </select>
-                </div>
-                <div class="detail-filter-group">
-                    <label for="detail-filter-month">Mes</label>
-                    <select id="detail-filter-month">
-                        <option value="all">Todas</option>
-                    </select>
+                    <label>Mes</label>
+                    <div class="ms-dropdown" id="detail-filter-month">
+                        <button type="button" class="ms-trigger" id="detail-filter-month-trigger">Todas</button>
+                        <div class="ms-panel" id="detail-filter-month-panel"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1674,11 +1810,11 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
         let state = {
             currentView: 'OPEX', // 'OPEX' or 'CAPEX'
             currency: 'USD', // 'USD' or 'PEN'
-            selectedYear: 'all',
-            selectedQ: 'all',
-            selectedMonth: 'all',
-            selectedCategory: 'all',
-            selectedSubcategory: 'all',
+            selectedYear: [],
+            selectedQ: [],
+            selectedMonth: [],
+            selectedCategory: [],
+            selectedSubcategory: [],
             
             // Raw Parsed Excel Data
             rawOpex: [],
@@ -1694,18 +1830,155 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
 
         // Detail View State
         let detailState = {
-            selectedYear: 'all',
-            selectedCategory: 'all',
-            selectedSubcategory: 'all',
-            selectedService: 'all',
-            selectedSystem: 'all',
-            selectedMonth: 'all'
+            selectedYear: [],
+            selectedCategory: [],
+            selectedSubcategory: [],
+            selectedService: [],
+            selectedSystem: [],
+            selectedMonth: []
         };
 
         const MONTH_MAP = {
             'ENERO': 1, 'FEBRERO': 2, 'MARZO': 3, 'ABRIL': 4, 'MAYO': 5, 'JUNIO': 6,
             'JULIO': 7, 'AGOSTO': 8, 'SETIEMBRE': 9, 'SEPTIEMBRE': 9, 'OCTUBRE': 10, 'NOVIEMBRE': 11, 'DICIEMBRE': 12
         };
+
+        const MONTH_OPTIONS = [
+            { value: 'ENERO', label: 'Enero' }, { value: 'FEBRERO', label: 'Febrero' },
+            { value: 'MARZO', label: 'Marzo' }, { value: 'ABRIL', label: 'Abril' },
+            { value: 'MAYO', label: 'Mayo' }, { value: 'JUNIO', label: 'Junio' },
+            { value: 'JULIO', label: 'Julio' }, { value: 'AGOSTO', label: 'Agosto' },
+            { value: 'SETIEMBRE', label: 'Setiembre' }, { value: 'OCTUBRE', label: 'Octubre' },
+            { value: 'NOVIEMBRE', label: 'Noviembre' }, { value: 'DICIEMBRE', label: 'Diciembre' }
+        ];
+
+        const Q_OPTIONS = [
+            { value: '1', label: '1er Quarter' }, { value: '2', label: '2do Quarter' },
+            { value: '3', label: '3er Quarter' }, { value: '4', label: '4to Quarter' }
+        ];
+
+        // -------------------------------------------------------------
+        // MULTI-SELECT FILTER HELPERS
+        // -------------------------------------------------------------
+        // An empty array means "Todas" (no filter applied for that field)
+        function isAllSelected(arr) { return !arr || arr.length === 0; }
+        function matchesFilter(arr, value) { return isAllSelected(arr) || arr.includes(value); }
+
+        // Reference year used for "Año Anterior" comparisons: the most recent
+        // selected year, or the latest available year if none/multiple ambiguous
+        function getPrimaryYear() {
+            if (state.selectedYear && state.selectedYear.length > 0) {
+                return state.selectedYear.slice().sort().reverse()[0];
+            }
+            if (state.years.length > 0) return String(state.years[state.years.length - 1]);
+            return null;
+        }
+
+        // Registry of multi-select widgets: key -> { panelId, triggerId, getArr, setArr, onChange }
+        const multiSelectRegistry = {};
+        function registerMultiSelect(key, panelId, triggerId, getArr, setArr, onChange) {
+            multiSelectRegistry[key] = { panelId, triggerId, getArr, setArr, onChange };
+        }
+
+        // Builds (or rebuilds) the checkbox list for a multi-select filter
+        function buildMultiSelectPanel(key, options) {
+            const cfg = multiSelectRegistry[key];
+            const panel = document.getElementById(cfg.panelId);
+            panel.innerHTML = '';
+
+            const allWrap = document.createElement('label');
+            allWrap.className = 'ms-option ms-option-all';
+            allWrap.innerHTML = `<input type="checkbox" data-all="true"><span>Todas</span>`;
+            panel.appendChild(allWrap);
+
+            options.forEach(opt => {
+                const wrap = document.createElement('label');
+                wrap.className = 'ms-option';
+                wrap.innerHTML = `<input type="checkbox" value="${opt.value}"><span>${opt.label}</span>`;
+                panel.appendChild(wrap);
+            });
+
+            panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    if (cb.dataset.all === 'true') {
+                        cfg.setArr([]);
+                    } else {
+                        const arr = cfg.getArr().slice();
+                        const idx = arr.indexOf(cb.value);
+                        if (cb.checked && idx === -1) arr.push(cb.value);
+                        if (!cb.checked && idx !== -1) arr.splice(idx, 1);
+                        cfg.setArr(arr);
+                    }
+                    refreshMultiSelectUI(key);
+                    if (cfg.onChange) cfg.onChange();
+                });
+            });
+
+            panel.querySelectorAll('.ms-option').forEach(opt => {
+                opt.addEventListener('click', (e) => e.stopPropagation());
+            });
+
+            refreshMultiSelectUI(key);
+        }
+
+        // Syncs checkbox states and trigger label with the current filter selection
+        function refreshMultiSelectUI(key) {
+            const cfg = multiSelectRegistry[key];
+            if (!cfg) return;
+            const panel = document.getElementById(cfg.panelId);
+            const trigger = document.getElementById(cfg.triggerId);
+            if (!panel || !trigger) return;
+            const arr = cfg.getArr();
+
+            const allBox = panel.querySelector('input[data-all="true"]');
+            if (allBox) allBox.checked = isAllSelected(arr);
+
+            let matchedLabel = null;
+            panel.querySelectorAll('input[type="checkbox"]:not([data-all])').forEach(cb => {
+                const checked = arr.includes(cb.value);
+                cb.checked = checked;
+                if (checked && arr.length === 1) matchedLabel = cb.nextElementSibling.textContent;
+            });
+
+            if (isAllSelected(arr)) {
+                trigger.textContent = 'Todas';
+            } else if (arr.length === 1) {
+                trigger.textContent = matchedLabel || arr[0];
+            } else {
+                trigger.textContent = `${arr.length} seleccionados`;
+            }
+        }
+
+        function closeAllMultiSelects() {
+            document.querySelectorAll('.ms-dropdown.open').forEach(d => d.classList.remove('open'));
+        }
+
+        // Cross-filtering engine: given a dataset, a map of field getters, and the
+        // current selections for each field, returns the set of values still
+        // available for each field once every OTHER field's selection is applied.
+        // This is what makes e.g. picking Categoria "Cloud" narrow down Subcategoria.
+        function computeCascadingOptions(dataset, fieldGetters, selections) {
+            const keys = Object.keys(fieldGetters);
+            const result = {};
+            keys.forEach(k => result[k] = new Set());
+
+            dataset.forEach(row => {
+                keys.forEach(key => {
+                    let ok = true;
+                    for (const otherKey of keys) {
+                        if (otherKey === key) continue;
+                        const val = fieldGetters[otherKey](row);
+                        if (!matchesFilter(selections[otherKey], val)) { ok = false; break; }
+                    }
+                    if (ok) {
+                        const v = fieldGetters[key](row);
+                        if (v) result[key].add(v);
+                    }
+                });
+            });
+            return result;
+        }
 
         // DOM Elements
         const el = {
@@ -1772,6 +2045,7 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             detailFilterSubcategory: document.getElementById('detail-filter-subcategory'),
             detailFilterService: document.getElementById('detail-filter-service'),
             detailFilterSystem: document.getElementById('detail-filter-system'),
+            detailFilterSystemGroup: document.getElementById('detail-filter-system-group'),
             detailFilterMonth: document.getElementById('detail-filter-month'),
             detailMatrixTable: document.getElementById('detail-matrix-table'),
             
@@ -1825,6 +2099,129 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             return variation > 0 ? 'green-pct' : variation < 0 ? 'red-pct' : '';
         }
 
+        // Rebuilds the 5 main dashboard filter panels with cross-filtering:
+        // each filter's options are narrowed by the current selection of the others.
+        function buildAllFilterPanels() {
+            const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
+            const isOpex = state.currentView === 'OPEX';
+
+            const fieldGetters = {
+                year: row => String(row.year),
+                q: row => String(Math.ceil(row.mes_num / 3)),
+                month: row => row.mes,
+                category: row => isOpex ? row.categoria : row.tipo,
+                subcategory: row => isOpex ? row.subcategoria : null
+            };
+            const selections = {
+                year: state.selectedYear, q: state.selectedQ, month: state.selectedMonth,
+                category: state.selectedCategory, subcategory: state.selectedSubcategory
+            };
+            const avail = computeCascadingOptions(dataset, fieldGetters, selections);
+
+            // Drop selections that are no longer possible given the other active filters
+            state.selectedYear = state.selectedYear.filter(v => avail.year.has(v));
+            state.selectedQ = state.selectedQ.filter(v => avail.q.has(v));
+            state.selectedMonth = state.selectedMonth.filter(v => avail.month.has(v));
+            state.selectedCategory = state.selectedCategory.filter(v => avail.category.has(v));
+            state.selectedSubcategory = state.selectedSubcategory.filter(v => avail.subcategory.has(v));
+
+            buildMultiSelectPanel('year', Array.from(avail.year).sort().map(y => ({ value: y, label: y })));
+            buildMultiSelectPanel('q', Q_OPTIONS.filter(o => avail.q.has(o.value)));
+            buildMultiSelectPanel('month', MONTH_OPTIONS.filter(o => avail.month.has(o.value)));
+            buildMultiSelectPanel('category', Array.from(avail.category).sort().map(c => ({ value: c, label: c })));
+
+            if (isOpex) {
+                buildMultiSelectPanel('subcategory', Array.from(avail.subcategory).sort().map(s => ({ value: s, label: s })));
+                el.filterSubcategoryGroup.classList.remove('hidden');
+            } else {
+                buildMultiSelectPanel('subcategory', []);
+                el.filterSubcategoryGroup.classList.add('hidden');
+            }
+        }
+
+        // Rebuilds the 6 detail-view filter panels with the same cross-filtering behaviour
+        function buildAllDetailFilterPanels() {
+            const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
+            const isOpex = state.currentView === 'OPEX';
+
+            const fieldGetters = {
+                detailYear: row => String(row.year),
+                detailCategory: row => isOpex ? row.categoria : row.tipo,
+                detailSubcategory: row => isOpex ? row.subcategoria : row.ceco,
+                detailService: row => isOpex ? row.servicio : row.detalle,
+                detailSystem: row => isOpex ? row.sistema : null,
+                detailMonth: row => row.mes
+            };
+            const selections = {
+                detailYear: detailState.selectedYear,
+                detailCategory: detailState.selectedCategory,
+                detailSubcategory: detailState.selectedSubcategory,
+                detailService: detailState.selectedService,
+                detailSystem: detailState.selectedSystem,
+                detailMonth: detailState.selectedMonth
+            };
+            const avail = computeCascadingOptions(dataset, fieldGetters, selections);
+
+            detailState.selectedYear = detailState.selectedYear.filter(v => avail.detailYear.has(v));
+            detailState.selectedCategory = detailState.selectedCategory.filter(v => avail.detailCategory.has(v));
+            detailState.selectedSubcategory = detailState.selectedSubcategory.filter(v => avail.detailSubcategory.has(v));
+            detailState.selectedService = detailState.selectedService.filter(v => avail.detailService.has(v));
+            detailState.selectedSystem = detailState.selectedSystem.filter(v => avail.detailSystem.has(v));
+            detailState.selectedMonth = detailState.selectedMonth.filter(v => avail.detailMonth.has(v));
+
+            buildMultiSelectPanel('detailYear', Array.from(avail.detailYear).sort().map(y => ({ value: y, label: y })));
+            buildMultiSelectPanel('detailCategory', Array.from(avail.detailCategory).sort().map(c => ({ value: c, label: c })));
+            buildMultiSelectPanel('detailSubcategory', Array.from(avail.detailSubcategory).sort().map(s => ({ value: s, label: s })));
+            buildMultiSelectPanel('detailService', Array.from(avail.detailService).sort().map(s => ({ value: s, label: s })));
+
+            if (isOpex) {
+                buildMultiSelectPanel('detailSystem', Array.from(avail.detailSystem).sort().map(s => ({ value: s, label: s })));
+                el.detailFilterSystemGroup.classList.remove('hidden');
+            } else {
+                buildMultiSelectPanel('detailSystem', []);
+                el.detailFilterSystemGroup.classList.add('hidden');
+            }
+
+            buildMultiSelectPanel('detailMonth', MONTH_OPTIONS.filter(o => avail.detailMonth.has(o.value)));
+        }
+
+        // Register main dashboard filters
+        registerMultiSelect('year', 'filter-year-panel', 'filter-year-trigger',
+            () => state.selectedYear, (v) => { state.selectedYear = v; state.activeSelection = null; },
+            () => { buildAllFilterPanels(); updateDashboard(); });
+        registerMultiSelect('q', 'filter-q-panel', 'filter-q-trigger',
+            () => state.selectedQ, (v) => { state.selectedQ = v; },
+            () => { buildAllFilterPanels(); updateDashboard(); });
+        registerMultiSelect('month', 'filter-month-panel', 'filter-month-trigger',
+            () => state.selectedMonth, (v) => { state.selectedMonth = v; },
+            () => { buildAllFilterPanels(); updateDashboard(); });
+        registerMultiSelect('category', 'filter-category-panel', 'filter-category-trigger',
+            () => state.selectedCategory, (v) => { state.selectedCategory = v; },
+            () => { buildAllFilterPanels(); updateDashboard(); });
+        registerMultiSelect('subcategory', 'filter-subcategory-panel', 'filter-subcategory-trigger',
+            () => state.selectedSubcategory, (v) => { state.selectedSubcategory = v; },
+            () => { buildAllFilterPanels(); updateDashboard(); });
+
+        // Register detail-view filters
+        registerMultiSelect('detailYear', 'detail-filter-year-panel', 'detail-filter-year-trigger',
+            () => detailState.selectedYear, (v) => { detailState.selectedYear = v; },
+            () => { buildAllDetailFilterPanels(); updateDetailMatrixTable(); });
+        registerMultiSelect('detailCategory', 'detail-filter-category-panel', 'detail-filter-category-trigger',
+            () => detailState.selectedCategory, (v) => { detailState.selectedCategory = v; },
+            () => { buildAllDetailFilterPanels(); updateDetailMatrixTable(); });
+        registerMultiSelect('detailSubcategory', 'detail-filter-subcategory-panel', 'detail-filter-subcategory-trigger',
+            () => detailState.selectedSubcategory, (v) => { detailState.selectedSubcategory = v; },
+            () => { buildAllDetailFilterPanels(); updateDetailMatrixTable(); });
+        registerMultiSelect('detailService', 'detail-filter-service-panel', 'detail-filter-service-trigger',
+            () => detailState.selectedService, (v) => { detailState.selectedService = v; },
+            () => { buildAllDetailFilterPanels(); updateDetailMatrixTable(); });
+        registerMultiSelect('detailSystem', 'detail-filter-system-panel', 'detail-filter-system-trigger',
+            () => detailState.selectedSystem, (v) => { detailState.selectedSystem = v; },
+            () => { buildAllDetailFilterPanels(); updateDetailMatrixTable(); });
+        registerMultiSelect('detailMonth', 'detail-filter-month-panel', 'detail-filter-month-trigger',
+            () => detailState.selectedMonth, (v) => { detailState.selectedMonth = v; },
+            () => { buildAllDetailFilterPanels(); updateDetailMatrixTable(); });
+
         // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
             setupEventListeners();
@@ -1832,8 +2229,8 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             loadDataFromStorage();
             
             if (state.rawOpex.length > 0 || state.rawCapex.length > 0) {
-                if (state.selectedYear === 'all' && state.years.length > 0) {
-                    state.selectedYear = String(state.years[state.years.length - 1]);
+                if (state.selectedYear.length === 0 && state.years.length > 0) {
+                    state.selectedYear = [String(state.years[state.years.length - 1])];
                 }
                 el.updateDateLabel.textContent = `Actualizado el ${state.lastUpdated}`;
                 populateFilters();
@@ -1842,11 +2239,21 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
         });
 
         function setupEventListeners() {
-            el.filterYear.addEventListener('change', (e) => { state.selectedYear = e.target.value; state.activeSelection = null; updateDashboard(); });
-            el.filterQ.addEventListener('change', (e) => { state.selectedQ = e.target.value; updateDashboard(); });
-            el.filterMonth.addEventListener('change', (e) => { state.selectedMonth = e.target.value; updateDashboard(); });
-            el.filterCategory.addEventListener('change', (e) => { state.selectedCategory = e.target.value; updateDashboard(); });
-            el.filterSubcategory.addEventListener('change', (e) => { state.selectedSubcategory = e.target.value; updateDashboard(); });
+            // Multi-select filter dropdowns: toggle open/close on trigger click
+            Object.keys(multiSelectRegistry).forEach(key => {
+                const cfg = multiSelectRegistry[key];
+                const trigger = document.getElementById(cfg.triggerId);
+                const dropdown = document.getElementById(cfg.panelId).closest('.ms-dropdown');
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const wasOpen = dropdown.classList.contains('open');
+                    closeAllMultiSelects();
+                    if (!wasOpen) dropdown.classList.add('open');
+                });
+            });
+            window.addEventListener('click', (e) => {
+                if (!e.target.closest('.ms-dropdown')) closeAllMultiSelects();
+            });
 
             el.btnClearFilters.addEventListener('click', clearAllFilters);
             
@@ -1899,12 +2306,6 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                 }
             });
 
-            el.detailFilterYear.addEventListener('change', onDetailFilterChange);
-            el.detailFilterCategory.addEventListener('change', onDetailFilterChange);
-            el.detailFilterSubcategory.addEventListener('change', onDetailFilterChange);
-            el.detailFilterService.addEventListener('change', onDetailFilterChange);
-            el.detailFilterSystem.addEventListener('change', onDetailFilterChange);
-            el.detailFilterMonth.addEventListener('change', onDetailFilterChange);
             el.btnDetailClear.addEventListener('click', clearDetailFilters);
         }
 
@@ -2087,7 +2488,7 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                 saveDataToStorage();
                 
                 if (state.years.length > 0) {
-                    state.selectedYear = String(state.years[state.years.length - 1]);
+                    state.selectedYear = [String(state.years[state.years.length - 1])];
                 }
                 
                 populateFilters();
@@ -2114,37 +2515,7 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
         }
 
         function populateFilters() {
-            el.filterYear.innerHTML = '<option value="all">Todas</option>';
-            el.filterCategory.innerHTML = '<option value="all">Todas</option>';
-            el.filterSubcategory.innerHTML = '<option value="all">Todas</option>';
-
-            state.years.forEach(y => el.filterYear.innerHTML += `<option value="${y}">${y}</option>`);
-
-            const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
-            const categories = new Set();
-            const subcategories = new Set();
-            
-            dataset.forEach(row => {
-                if (state.currentView === 'OPEX') {
-                    if (row.categoria) categories.add(row.categoria);
-                    if (row.subcategoria) subcategories.add(row.subcategoria);
-                } else {
-                    if (row.tipo) categories.add(row.tipo);
-                }
-            });
-
-            Array.from(categories).sort().forEach(c => el.filterCategory.innerHTML += `<option value="${c}">${c}</option>`);
-            
-            if (state.currentView === 'OPEX') {
-                Array.from(subcategories).sort().forEach(s => el.filterSubcategory.innerHTML += `<option value="${s}">${s}</option>`);
-                el.filterSubcategoryGroup.classList.remove('hidden');
-            } else {
-                el.filterSubcategoryGroup.classList.add('hidden');
-            }
-
-            el.filterYear.value = state.selectedYear;
-            el.filterCategory.value = state.selectedCategory;
-            el.filterSubcategory.value = state.selectedSubcategory;
+            buildAllFilterPanels();
         }
 
         // Exchange Rate prompt checks
@@ -2226,28 +2597,23 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
         }
 
         function clearAllFilters() {
-            state.selectedQ = 'all';
-            state.selectedMonth = 'all';
-            state.selectedCategory = 'all';
-            state.selectedSubcategory = 'all';
-            
-            el.filterQ.value = 'all';
-            el.filterMonth.value = 'all';
-            el.filterCategory.value = 'all';
-            if (el.filterSubcategory) el.filterSubcategory.value = 'all';
-            
+            state.selectedQ = [];
+            state.selectedMonth = [];
+            state.selectedCategory = [];
+            state.selectedSubcategory = [];
+
             if (state.years.length > 0) {
-                state.selectedYear = String(state.years[state.years.length - 1]);
-                el.filterYear.value = state.selectedYear;
+                state.selectedYear = [String(state.years[state.years.length - 1])];
             }
             state.activeSelection = null;
+            buildAllFilterPanels();
             updateDashboard();
         }
 
         // YTD Lógicas de Corte
         function getPriorYearCutoffMonth() {
-            if (state.selectedMonth !== 'all') {
-                return MONTH_MAP[state.selectedMonth];
+            if (state.selectedMonth.length === 1) {
+                return MONTH_MAP[state.selectedMonth[0]];
             }
             // Cut-off for previous year is always current month of Today (July = 7)
             const today = new Date();
@@ -2257,21 +2623,15 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
         function getFilteredData() {
             const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
             return dataset.filter(row => {
-                if (state.selectedYear !== 'all' && String(row.year) !== state.selectedYear) return false;
-                if (state.selectedQ !== 'all') {
-                    const q = Math.ceil(row.mes_num / 3);
-                    if (String(q) !== state.selectedQ) return false;
+                if (!matchesFilter(state.selectedYear, String(row.year))) return false;
+                if (!matchesFilter(state.selectedQ, String(Math.ceil(row.mes_num / 3)))) return false;
+                if (!matchesFilter(state.selectedMonth, row.mes)) return false;
+                if (state.currentView === 'OPEX') {
+                    if (!matchesFilter(state.selectedCategory, row.categoria)) return false;
+                } else {
+                    if (!matchesFilter(state.selectedCategory, row.tipo)) return false;
                 }
-                if (state.selectedMonth !== 'all' && row.mes !== state.selectedMonth) return false;
-                if (state.selectedCategory !== 'all') {
-                    const compCat = state.currentView === 'OPEX' ? row.categoria : row.tipo;
-                    if (compCat !== state.selectedCategory) return false;
-                }
-                if (state.currentView === 'OPEX' && state.selectedSubcategory !== 'all') {
-                    if (row.subcategoria !== state.selectedSubcategory) return false;
-                }
-                
-                // Double-click row filters applied to KPIs and chart ONLY
+                if (state.currentView === 'OPEX' && !matchesFilter(state.selectedSubcategory, row.subcategoria)) return false;
                 if (state.activeSelection) {
                     const sel = state.activeSelection;
                     if (sel.type === 'category' && row.categoria !== sel.value) return false;
@@ -2288,27 +2648,24 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
         function getFilteredTableData() {
             const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
             return dataset.filter(row => {
-                if (state.selectedYear !== 'all' && String(row.year) !== state.selectedYear) return false;
-                if (state.selectedQ !== 'all') {
-                    const q = Math.ceil(row.mes_num / 3);
-                    if (String(q) !== state.selectedQ) return false;
+                if (!matchesFilter(state.selectedYear, String(row.year))) return false;
+                if (!matchesFilter(state.selectedQ, String(Math.ceil(row.mes_num / 3)))) return false;
+                if (!matchesFilter(state.selectedMonth, row.mes)) return false;
+                if (state.currentView === 'OPEX') {
+                    if (!matchesFilter(state.selectedCategory, row.categoria)) return false;
+                } else {
+                    if (!matchesFilter(state.selectedCategory, row.tipo)) return false;
                 }
-                if (state.selectedMonth !== 'all' && row.mes !== state.selectedMonth) return false;
-                if (state.selectedCategory !== 'all') {
-                    const compCat = state.currentView === 'OPEX' ? row.categoria : row.tipo;
-                    if (compCat !== state.selectedCategory) return false;
-                }
-                if (state.currentView === 'OPEX' && state.selectedSubcategory !== 'all') {
-                    if (row.subcategoria !== state.selectedSubcategory) return false;
-                }
+                if (state.currentView === 'OPEX' && !matchesFilter(state.selectedSubcategory, row.subcategoria)) return false;
                 return true;
             });
         }
 
         // Filters previous year data WITH cutoff constraint (for Spent, Saving, Unused)
         function getPrevYearFilteredData() {
-            if (state.selectedYear === 'all') return [];
-            const prevYearStr = String(parseInt(state.selectedYear) - 1);
+            const refYear = getPrimaryYear();
+            if (!refYear) return [];
+            const prevYearStr = String(parseInt(refYear) - 1);
             const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
             
             const cutoffMonth = getPriorYearCutoffMonth();
@@ -2319,17 +2676,13 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
                 // Apply cutoff month constraint
                 if (row.mes_num > cutoffMonth) return false;
                 
-                if (state.selectedQ !== 'all') {
-                    const q = Math.ceil(row.mes_num / 3);
-                    if (String(q) !== state.selectedQ) return false;
+                if (!matchesFilter(state.selectedQ, String(Math.ceil(row.mes_num / 3)))) return false;
+                if (state.currentView === 'OPEX') {
+                    if (!matchesFilter(state.selectedCategory, row.categoria)) return false;
+                } else {
+                    if (!matchesFilter(state.selectedCategory, row.tipo)) return false;
                 }
-                if (state.selectedCategory !== 'all') {
-                    const compCat = state.currentView === 'OPEX' ? row.categoria : row.tipo;
-                    if (compCat !== state.selectedCategory) return false;
-                }
-                if (state.currentView === 'OPEX' && state.selectedSubcategory !== 'all') {
-                    if (row.subcategoria !== state.selectedSubcategory) return false;
-                }
+                if (state.currentView === 'OPEX' && !matchesFilter(state.selectedSubcategory, row.subcategoria)) return false;
                 
                 // Double-click row filters
                 if (state.activeSelection) {
@@ -2346,25 +2699,22 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
 
         // Filters previous year data WITHOUT YTD cutoff constraint (sums full 12 months for Budget comparisons)
         function getPrevYearFullFilteredData() {
-            if (state.selectedYear === 'all') return [];
-            const prevYearStr = String(parseInt(state.selectedYear) - 1);
+            const refYear = getPrimaryYear();
+            if (!refYear) return [];
+            const prevYearStr = String(parseInt(refYear) - 1);
             const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
             
             return dataset.filter(row => {
                 if (String(row.year) !== prevYearStr) return false;
                 // NO cutoff month filter! Sums full year budget!
                 
-                if (state.selectedQ !== 'all') {
-                    const q = Math.ceil(row.mes_num / 3);
-                    if (String(q) !== state.selectedQ) return false;
+                if (!matchesFilter(state.selectedQ, String(Math.ceil(row.mes_num / 3)))) return false;
+                if (state.currentView === 'OPEX') {
+                    if (!matchesFilter(state.selectedCategory, row.categoria)) return false;
+                } else {
+                    if (!matchesFilter(state.selectedCategory, row.tipo)) return false;
                 }
-                if (state.selectedCategory !== 'all') {
-                    const compCat = state.currentView === 'OPEX' ? row.categoria : row.tipo;
-                    if (compCat !== state.selectedCategory) return false;
-                }
-                if (state.currentView === 'OPEX' && state.selectedSubcategory !== 'all') {
-                    if (row.subcategoria !== state.selectedSubcategory) return false;
-                }
+                if (state.currentView === 'OPEX' && !matchesFilter(state.selectedSubcategory, row.subcategoria)) return false;
                 
                 // Double-click row filters
                 if (state.activeSelection) {
@@ -2482,7 +2832,7 @@ body:not(.light-theme) #kpi-no-usado .kpi-card-icon-container { border: 10px sol
             }
             
             // budget full year previous year show directly without variation percentage
-if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
+if (!isAllSelected(state.selectedYear) && kpis.presupuesto.prev > 0) {
     const cls = getArrowClass(kpis.presupuesto.varPct);
     el.subPresupuestoPrev.innerHTML = `<strong>PPTO Año Ant.:</strong> <span class="val">${formatCurrency(kpis.presupuesto.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.presupuesto.varPct, true)} ${getArrowIcon(kpis.presupuesto.varPct)}</span>`;
     el.subPresupuestoPrev.classList.remove('hidden');
@@ -2498,7 +2848,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                 el.subGastadoAlt.classList.add('hidden');
             }
             
-            if (state.selectedYear !== 'all' && kpis.gastado.prev > 0) {
+            if (!isAllSelected(state.selectedYear) && kpis.gastado.prev > 0) {
                 const cls = getArrowClass(kpis.gastado.varPct);
                 el.subGastadoPrev.innerHTML = `<strong>Gastado Año Ant.:</strong> <span class="val">${formatCurrency(kpis.gastado.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.gastado.varPct, true)} ${getArrowIcon(kpis.gastado.varPct)}</span>`;
                 el.subGastadoPrev.classList.remove('hidden');
@@ -2521,7 +2871,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                 el.subAhorradoAlt.classList.add('hidden');
             }
             
-            if (state.selectedYear !== 'all' && kpis.ahorrado.prev > 0) {
+            if (!isAllSelected(state.selectedYear) && kpis.ahorrado.prev > 0) {
                 const cls = getArrowClass(kpis.ahorrado.varPct);
                 el.subAhorradoPrev.innerHTML = `<strong>Ahorrado Año Ant.:</strong> <span class="val">${formatCurrency(kpis.ahorrado.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.ahorrado.varPct, true)} ${getArrowIcon(kpis.ahorrado.varPct)}</span>`;
                 el.subAhorradoPrev.classList.remove('hidden');
@@ -2547,7 +2897,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                     el.subNoUsadoAlt.classList.add('hidden');
                 }
                 
-                if (state.selectedYear !== 'all' && kpis.noUsado.prev > 0) {
+                if (!isAllSelected(state.selectedYear) && kpis.noUsado.prev > 0) {
                     const cls = getArrowClass(kpis.noUsado.varPct);
                     el.subNoUsadoPrev.innerHTML = `<strong>PPTO no Usado Año Ant.:</strong> <span class="val">${formatCurrency(kpis.noUsado.prev, state.currency)}</span> / <span class="var-pct-label ${cls}">${formatPercentage(kpis.noUsado.varPct, true)} ${getArrowIcon(kpis.noUsado.varPct)}</span>`;
                     el.subNoUsadoPrev.classList.remove('hidden');
@@ -2727,12 +3077,12 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                             const monthName = displayMonths[index];
                             
                             // Click month: Filter whole dashboard by month
-                            if (state.selectedMonth === monthName) {
-                                state.selectedMonth = 'all';
+                            if (state.selectedMonth.length === 1 && state.selectedMonth[0] === monthName) {
+                                state.selectedMonth = [];
                             } else {
-                                state.selectedMonth = monthName;
+                                state.selectedMonth = [monthName];
                             }
-                            el.filterMonth.value = state.selectedMonth;
+                            buildAllFilterPanels();
                             updateDashboard();
                         }
                     }
@@ -2763,11 +3113,23 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
             }
         }
 
+        // Builds the "% Ejecutado" cell: percentage value + progress bar
+        function renderExecCell(gastado, ppto) {
+            const pct = ppto > 0 ? (gastado / ppto) * 100 : 0;
+            const barWidth = Math.min(Math.max(pct, 0), 100);
+            return `
+                <td class="num-col exec-col">
+                    <div class="exec-pct">${pct.toFixed(1)}%</div>
+                    <div class="exec-bar-track"><div class="exec-bar-fill" style="width:${barWidth}%"></div></div>
+                </td>
+            `;
+        }
+
         function renderExpandableTable(data, tableElement, childField, tableSide) {
             const tbody = tableElement.querySelector('tbody');
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
                 return;
             }
 
@@ -2819,6 +3181,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                     <td><span class="tree-toggle-icon"><i class="fa-solid fa-chevron-right"></i></span>${cat}</td>
                     <td class="num-col">${Math.round(parent.ppto).toLocaleString()}</td>
                     <td class="num-col">${Math.round(parent.gastado).toLocaleString()}</td>
+                    ${renderExecCell(parent.gastado, parent.ppto)}
                     <td class="num-col">${Math.round(parent.ahorro_proy).toLocaleString()}</td>
                     <td class="num-col">${Math.round(parent.ahorrado).toLocaleString()}</td>
                     <td class="num-col">${Math.round(parent.no_usado).toLocaleString()}</td>
@@ -2855,6 +3218,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                             <td>${childName}</td>
                             <td class="num-col">${Math.round(child.ppto).toLocaleString()}</td>
                             <td class="num-col">${Math.round(child.gastado).toLocaleString()}</td>
+                            ${renderExecCell(child.gastado, child.ppto)}
                             <td class="num-col">${Math.round(child.ahorro_proy).toLocaleString()}</td>
                             <td class="num-col">${Math.round(child.ahorrado).toLocaleString()}</td>
                             <td class="num-col">${Math.round(child.no_usado).toLocaleString()}</td>
@@ -2882,6 +3246,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                 <td>TOTAL</td>
                 <td class="num-col">${Math.round(totalPpto).toLocaleString()}</td>
                 <td class="num-col">${Math.round(totalGastado).toLocaleString()}</td>
+                ${renderExecCell(totalGastado, totalPpto)}
                 <td class="num-col">${Math.round(totalAhorroProy).toLocaleString()}</td>
                 <td class="num-col">${Math.round(totalAhorrado).toLocaleString()}</td>
                 <td class="num-col">${Math.round(totalNoUsado).toLocaleString()}</td>
@@ -2893,7 +3258,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
             const tbody = tableElement.querySelector('tbody');
             tbody.innerHTML = '';
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 12px;">Sin datos disponibles</td></tr>';
                 return;
             }
 
@@ -2915,6 +3280,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                     <td>${row.detalle}</td>
                     <td class="num-col">${Math.round(ppto).toLocaleString()}</td>
                     <td class="num-col">${Math.round(gastado).toLocaleString()}</td>
+                    ${renderExecCell(gastado, ppto)}
                     <td class="num-col">${Math.round(ahorroProy).toLocaleString()}</td>
                     <td class="num-col">${Math.round(ahorrado).toLocaleString()}</td>
                     <td class="num-col">${Math.round(noUsado).toLocaleString()}</td>
@@ -2939,6 +3305,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                 <td>TOTAL</td>
                 <td class="num-col">${Math.round(totalPpto).toLocaleString()}</td>
                 <td class="num-col">${Math.round(totalGastado).toLocaleString()}</td>
+                ${renderExecCell(totalGastado, totalPpto)}
                 <td class="num-col">${Math.round(totalAhorroProy).toLocaleString()}</td>
                 <td class="num-col">${Math.round(totalAhorrado).toLocaleString()}</td>
                 <td class="num-col">${Math.round(totalNoUsado).toLocaleString()}</td>
@@ -2956,31 +3323,33 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
                 return;
             }
             let dynamicName = "TODOS";
-            detailState.selectedYear = state.selectedYear;
-            detailState.selectedCategory = state.selectedCategory;
-            detailState.selectedSubcategory = state.selectedSubcategory;
-            detailState.selectedService = 'all';
-            detailState.selectedSystem = 'all';
-            detailState.selectedMonth = state.selectedMonth;
+
+            // Detail view now supports multi-selection too, so main filter arrays carry over as-is
+            detailState.selectedYear = state.selectedYear.slice();
+            detailState.selectedCategory = state.selectedCategory.slice();
+            detailState.selectedSubcategory = state.selectedSubcategory.slice();
+            detailState.selectedService = [];
+            detailState.selectedSystem = [];
+            detailState.selectedMonth = state.selectedMonth.slice();
 
             if (state.activeSelection) {
                 dynamicName = state.activeSelection.value.toUpperCase();
                 if (state.activeSelection.type === 'month') {
-                    detailState.selectedMonth = state.activeSelection.value;
+                    detailState.selectedMonth = [state.activeSelection.value];
                 } else if (state.activeSelection.type === 'category') {
-                    detailState.selectedCategory = state.activeSelection.value;
+                    detailState.selectedCategory = [state.activeSelection.value];
                 } else if (state.activeSelection.type === 'subcategoria') {
-                    detailState.selectedSubcategory = state.activeSelection.value;
-                    detailState.selectedCategory = state.activeSelection.parentCat;
+                    detailState.selectedSubcategory = [state.activeSelection.value];
+                    detailState.selectedCategory = [state.activeSelection.parentCat];
                 } else if (state.activeSelection.type === 'servicio') {
-                    detailState.selectedService = state.activeSelection.value;
-                    detailState.selectedCategory = state.activeSelection.parentCat;
+                    detailState.selectedService = [state.activeSelection.value];
+                    detailState.selectedCategory = [state.activeSelection.parentCat];
                 } else if (state.activeSelection.type === 'detalle') {
-                    detailState.selectedService = state.activeSelection.value;
+                    detailState.selectedService = [state.activeSelection.value];
                 }
             } else {
-                if (state.selectedCategory !== 'all') dynamicName = state.selectedCategory.toUpperCase();
-                else if (state.selectedMonth !== 'all') dynamicName = state.selectedMonth.toUpperCase();
+                if (detailState.selectedCategory.length === 1) dynamicName = detailState.selectedCategory[0].toUpperCase();
+                else if (detailState.selectedMonth.length === 1) dynamicName = detailState.selectedMonth[0].toUpperCase();
             }
 
             el.detailViewTitle.textContent = `DETALLE DE PRESUPUESTO - ${dynamicName}`;
@@ -2994,7 +3363,7 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
             // Sync Detail view currency switcher text
             el.btnDetailCurrency.querySelector('.currency-indicator').textContent = state.currency === 'USD' ? '$' : 'S/.';
 
-            populateDetailFilters();
+            buildAllDetailFilterPanels();
             updateDetailMatrixTable();
         }
 
@@ -3007,73 +3376,17 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
             updateDashboard();
         }
 
-        function populateDetailFilters() {
-            const selects = {
-                year: el.detailFilterYear, category: el.detailFilterCategory, subcategory: el.detailFilterSubcategory,
-                service: el.detailFilterService, system: el.detailFilterSystem, month: el.detailFilterMonth
-            };
-
-            Object.values(selects).forEach(sel => sel.innerHTML = '<option value="all">Todas</option>');
-
-            state.years.forEach(y => selects.year.innerHTML += `<option value="${y}">${y}</option>`);
-            const monthsSorted = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
-            monthsSorted.forEach(m => selects.month.innerHTML += `<option value="${m}">${m.charAt(0) + m.slice(1).toLowerCase()}</option>`);
-
-            const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
-            const categories = new Set(), subcategories = new Set(), services = new Set(), systems = new Set();
-
-            dataset.forEach(row => {
-                if (state.currentView === 'OPEX') {
-                    if (row.categoria) categories.add(row.categoria);
-                    if (row.subcategoria) subcategories.add(row.subcategoria);
-                    if (row.servicio) services.add(row.servicio);
-                    if (row.sistema) systems.add(row.sistema);
-                } else {
-                    if (row.tipo) categories.add(row.tipo);
-                    if (row.detalle) services.add(row.detalle);
-                    if (row.ceco) subcategories.add(row.ceco);
-                }
-            });
-
-            Array.from(categories).sort().forEach(c => selects.category.innerHTML += `<option value="${c}">${c}</option>`);
-            Array.from(subcategories).sort().forEach(s => selects.subcategory.innerHTML += `<option value="${s}">${s}</option>`);
-            Array.from(services).sort().forEach(s => selects.service.innerHTML += `<option value="${s}">${s}</option>`);
-            Array.from(systems).sort().forEach(s => selects.system.innerHTML += `<option value="${s}">${s}</option>`);
-
-            selects.year.value = detailState.selectedYear;
-            selects.category.value = detailState.selectedCategory;
-            selects.subcategory.value = detailState.selectedSubcategory;
-            selects.service.value = detailState.selectedService;
-            selects.system.value = detailState.selectedSystem;
-            selects.month.value = detailState.selectedMonth;
-        }
-
-        // Detail Filter listeners
-        function onDetailFilterChange() {
-            detailState.selectedYear = el.detailFilterYear.value;
-            detailState.selectedCategory = el.detailFilterCategory.value;
-            detailState.selectedSubcategory = el.detailFilterSubcategory.value;
-            detailState.selectedService = el.detailFilterService.value;
-            detailState.selectedSystem = el.detailFilterSystem.value;
-            detailState.selectedMonth = el.detailFilterMonth.value;
-            updateDetailMatrixTable();
-        }
-
         // Clear filter details
         function clearDetailFilters() {
-            detailState.selectedCategory = 'all';
-            detailState.selectedSubcategory = 'all';
-            detailState.selectedService = 'all';
-            detailState.selectedSystem = 'all';
-            detailState.selectedMonth = 'all';
-            if (state.years.length > 0) detailState.selectedYear = String(state.years[state.years.length - 1]);
-            
-            el.detailFilterYear.value = detailState.selectedYear;
-            el.detailFilterCategory.value = 'all';
-            el.detailFilterSubcategory.value = 'all';
-            el.detailFilterService.value = 'all';
-            el.detailFilterSystem.value = 'all';
-            el.detailFilterMonth.value = 'all';
+            detailState.selectedCategory = [];
+            detailState.selectedSubcategory = [];
+            detailState.selectedService = [];
+            detailState.selectedSystem = [];
+            detailState.selectedMonth = [];
+            if (state.years.length > 0) detailState.selectedYear = [String(state.years[state.years.length - 1])];
+            else detailState.selectedYear = [];
+
+            buildAllDetailFilterPanels();
             updateDetailMatrixTable();
         }
 
@@ -3083,25 +3396,25 @@ if (state.selectedYear !== 'all' && kpis.presupuesto.prev > 0) {
             const dataset = state.currentView === 'OPEX' ? state.rawOpex : state.rawCapex;
             
             const rowsFiltered = dataset.filter(row => {
-                if (detailState.selectedYear !== 'all' && String(row.year) !== detailState.selectedYear) return false;
-                if (detailState.selectedMonth !== 'all' && row.mes !== detailState.selectedMonth) return false;
+                if (!matchesFilter(detailState.selectedYear, String(row.year))) return false;
+                if (!matchesFilter(detailState.selectedMonth, row.mes)) return false;
                 
                 if (state.currentView === 'OPEX') {
-                    if (detailState.selectedCategory !== 'all' && row.categoria !== detailState.selectedCategory) return false;
-                    if (detailState.selectedSubcategory !== 'all' && row.subcategoria !== detailState.selectedSubcategory) return false;
-                    if (detailState.selectedService !== 'all' && row.servicio !== detailState.selectedService) return false;
-                    if (detailState.selectedSystem !== 'all' && row.sistema !== detailState.selectedSystem) return false;
+                    if (!matchesFilter(detailState.selectedCategory, row.categoria)) return false;
+                    if (!matchesFilter(detailState.selectedSubcategory, row.subcategoria)) return false;
+                    if (!matchesFilter(detailState.selectedService, row.servicio)) return false;
+                    if (!matchesFilter(detailState.selectedSystem, row.sistema)) return false;
                 } else {
-                    if (detailState.selectedCategory !== 'all' && row.tipo !== detailState.selectedCategory) return false;
-                    if (detailState.selectedSubcategory !== 'all' && row.ceco !== detailState.selectedSubcategory) return false;
-                    if (detailState.selectedService !== 'all' && row.detalle !== detailState.selectedService) return false;
+                    if (!matchesFilter(detailState.selectedCategory, row.tipo)) return false;
+                    if (!matchesFilter(detailState.selectedSubcategory, row.ceco)) return false;
+                    if (!matchesFilter(detailState.selectedService, row.detalle)) return false;
                 }
                 return true;
             });
 
             let activeMonths = monthsSorted;
-            if (detailState.selectedMonth !== 'all') {
-                activeMonths = [detailState.selectedMonth];
+            if (detailState.selectedMonth.length > 0) {
+                activeMonths = monthsSorted.filter(m => detailState.selectedMonth.includes(m));
             } else {
                 const monthsWithData = new Set(rowsFiltered.map(r => r.mes));
                 activeMonths = monthsSorted.filter(m => monthsWithData.has(m));
